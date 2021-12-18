@@ -6,7 +6,7 @@ this is the core system of my huffman coding project
 
 # How to use
 compile using cl.exe which is the compiler of Microsoft Viusual C++.
-give command 3 line argument
+give 3 command line argument
 
 [.exe name] [Compression(1) or Extraction(2)] [file1 path] [file2 path]
 
