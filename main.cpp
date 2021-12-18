@@ -1,6 +1,7 @@
 
 #include "ehufbase.hpp"
 #include <string.h>
+#include <stdlib.h>
 
 bool isEhufFile(char* pFilename);
 bool GetFileExtensionUnderEhuf(char* pFilename, char* pFileExtension);
@@ -46,6 +47,25 @@ int main(int argc, char** argv)
 
         fclose(pTestFile1);
         fclose(pTestFile2);
+
+        FILE* p_process;
+
+        p_process = _popen(p_file_name, "r");
+
+        if (p_process == NULL)
+        {
+            printf("failed");
+        }
+
+        _pclose(p_process);
+        printf("a");
+
+        char* p_cmd_line;
+        p_cmd_line = new char[10 + strlen(p_file_name)];
+
+        strcpy(p_cmd_line, "del ");
+        strcat(p_cmd_line, p_file_name);
+        system(p_cmd_line);
     }
     else
     {
