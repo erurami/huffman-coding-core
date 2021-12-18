@@ -9,7 +9,9 @@ this is the core system of my huffman coding project
 # How to use
 
 圧縮、解凍したいファイルをehuf.exeにドラッグドロップするだけで勝手に圧縮、解凍してくれます
-もしファイルが.ehufファイルでなかったときは同じディレクトリに圧縮したファイルを"元の名前+.ehuf"の名前で保存します
+
+もしファイルが.ehufファイルでなかったときは同じディレクトリに圧縮したファイルを"元の名前+.ehuf"の名前で保存します.
+
 もしファイルが.ehufであったときはファイルを解凍して同じディレクトリに.ehuf拡張子を消した名前で解凍したファイルを保存します
 
 just drag&drop your file to ehuf.exe
