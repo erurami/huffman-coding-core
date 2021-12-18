@@ -12,11 +12,11 @@ this is the core system of my huffman coding project
 
 もしファイルが.ehufファイルでなかったときは同じディレクトリに圧縮したファイルを"元の名前+.ehuf"の名前で保存します.
 
-もしファイルが.ehufであったときはファイルを解凍して同じディレクトリに.ehuf拡張子を消した名前で解凍したファイルを保存します
+もしファイルが.ehufであったときはファイルを解凍してそのファイルをデフォルトのアプリで開きます、開いた後にそのプロセスが終了すると解凍したファイルも自動的に消えます.
 
 just drag&drop your file to ehuf.exe
-if the file was .ehuf, it extracts the file and save it to the same directry.
-if the file was not .ehuf, it compresses the file and save it to the same directry with name made by original name and .ehuf extension.
+if the file was .ehuf, it extracts the file and open it by the default application and when the process is finished, the extracted file will be deleted.
+if the file was not .ehuf, it compresses the file and save it to the same directry with name made by original name and .ehuf extens
 
 # Other things
 
