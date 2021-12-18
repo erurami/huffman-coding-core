@@ -3,11 +3,38 @@
 #include <string.h>
 #pragma once
 
-struct CharAndFreq
+#define PI_COM_COUNTING_START 0
+#define PI_COM_COUNTING_END   50
+
+#define PI_COM_HUFFMANTREE_START 50
+#define PI_COM_HUFFMANTREE_END   51
+
+#define PI_COM_ENCODE_START 51
+#define PI_COM_ENCODE_END   100
+
+
+#define PI_EXT_READING_START 0
+#define PI_EXT_READING_END   50
+
+#define PI_EXT_HUFFMANTREE_START 50
+#define PI_EXT_HUFFMANTREE_END   51
+
+#define PI_EXT_DECODE_START 51
+#define PI_EXT_DECODE_END   100
+
+
+class CharAndFreq
 {
-    unsigned long long pFreqs[256];
-    int pFreqSortedExistChars[256];
-    int ExistCharsCount;
+    private:
+
+        unsigned long long pFreqs[256];
+        int pFreqSortedExistChars[256];
+        int ExistCharsCount;
+
+        CharAndFreq::CharAndFreq();
+
+        void CharAndFreq::CountFreqFromFile   (FILE* pFileToRead, long* pProgressPerMile = NULL);
+        void CharAndFreq::ReadFreqDataFromFIle(FILE* pFileToRead, long* pProgressPerMile = NULL);
 };
 // TODO : class matomeru sort tokano kinou ituka
 
@@ -41,31 +68,30 @@ class HuffmanTree
         int mLeafNodesLength;
         int mParentNodesLength;
 
-        HuffmanTree(int LeafNodesLength);
+        bool mInitialized;
+
+        HuffmanTree();
 
         ~HuffmanTree();
 
         void BuildHuffmanTree(CharAndFreq* pFreqDatas);
 };
 
-void ReadFreqDatasFromFile(FILE* pFileToRead, CharAndFreq* pFreqDatas);
-void CountFreqFromFile    (FILE* pFileToRead, CharAndFreq* pFreqDatas);
+void Encode(FILE* pFileToEncode, HuffmanTree* pHuffmanTree, FILE* pFileToWrite, long* pProgressPerMile = NULL);
+void Decode(FILE* pFileToDecode, HuffmanTree* pHuffmanTree, FILE* pFileToWrite, long* pProgressPerMile = NULL);
 
-void Encode(FILE* pFileToEncode, HuffmanTree* pHuffmanTree, FILE* pFileToWrite);
-void Decode(FILE* pFileToDecode, HuffmanTree* pHuffmanTree, FILE* pFileToWrite);
-
-void Compress(FILE* pFileSource, FILE* pFileTo);
-void Extract (FILE* pFileSource, FILE* pFileTo);
+void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgressPerMile = NULL);
+void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgressPerMile = NULL);
 
 
 
 
-void Compress(FILE* pFileSource, FILE* pFileTo)
+void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgressPerMile)
 {
     CharAndFreq char_freq_data;
-    CountFreqFromFile(pFileSource, &char_freq_data);
+    char_freq_data.CountFreqFromFile(pFileSource);
 
-    HuffmanTree huffman_tree(char_freq_data.ExistCharsCount);
+    HuffmanTree huffman_tree;
     huffman_tree.BuildHuffmanTree(&char_freq_data);
 
     Encode(pFileSource, &huffman_tree, pFileTo);
@@ -73,12 +99,12 @@ void Compress(FILE* pFileSource, FILE* pFileTo)
     return;
 }
 
-void Extract (FILE* pFileSource, FILE* pFileTo)
+void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgressPerMile)
 {
     CharAndFreq char_freq_data;
-    ReadFreqDatasFromFile(pFileSource, &char_freq_data);
+    char_freq_data.ReadFreqDatasFromFile(pFileSource);
 
-    HuffmanTree huffman_tree(char_freq_data.ExistCharsCount);
+    HuffmanTree huffman_tree;
     huffman_tree.BuildHuffmanTree(&char_freq_data);
 
     Decode(pFileSource, &huffman_tree, pFileTo);
