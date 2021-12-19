@@ -67,6 +67,14 @@ class HuffmanTree
             HeapNode* pLeftNode;
         };
 
+        struct ConvertionTable
+        {
+            bool Codes[256][256];
+            bool IsCodeExists[256];
+            int  CharCodeLength[256];
+        };
+
+
         HeapNode* mpLeafNodes;
         HeapNode* mpParentNodes;
 
@@ -82,6 +90,8 @@ class HuffmanTree
         ~HuffmanTree();
 
         void BuildHuffmanTree(CharAndFreq* pFreqDatas);
+
+        void MakeConvertionTable();
 };
 
 void Encode(FILE* pFileToEncode, HuffmanTree* pHuffmanTree, FILE* pFileToWrite, long* pProgressPermile = NULL);
@@ -615,6 +625,51 @@ void CharAndFreq::ReadFreqDataFromFile(FILE* pFileToRead, long* pProgressPermile
 {
 }
 
+// void ReadFreqDatasFromFile(FILE* pFileToRead, CharAndFreq* pFreqDatas)
+// {
+// 
+//     for (int i = 0; i < 256; i++)
+//     {
+//         pFreqDatas->pFreqs[i] = 0;
+//         pFreqDatas->pFreqSortedExistChars[i] = 0;
+//     }
+//     pFreqDatas->ExistCharsCount = 0;
+// 
+//     fseek(pFileToRead, 0xe, SEEK_SET);
+//     int exist_chars = fgetc(pFileToRead);
+//     pFreqDatas->ExistCharsCount = exist_chars == 0 ? 256 : exist_chars;
+// 
+//     int single_freq_data_bytes = fgetc(pFileToRead);
+// 
+//     fseek(pFileToRead, 0x21, SEEK_SET);
+//     for (int i = 0; i < pFreqDatas->ExistCharsCount; i++)
+//     {
+//         pFreqDatas->pFreqSortedExistChars[i] = fgetc(pFileToRead);
+//         for (int j = 0; j < single_freq_data_bytes; j++)
+//         {
+//             pFreqDatas->pFreqs[pFreqDatas->pFreqSortedExistChars[i]] += fgetc(pFileToRead) << (8 * j);
+//         }
+//     }
+// 
+//     // int c;
+//     // for (int i = 0; i < pFreqDatas->ExistCharsCount; i++)
+//     // {
+//     //     c = pFreqDatas->pFreqSortedExistChars[i];
+//     //     printf("%2X : %llu\n", c, pFreqDatas->pFreqs[c]);
+//     // }
+// }
+
+unsigned long long GetFileSize(FILE* pFile)
+{
+    unsigned long long file_size;
+
+    fseek(pFile, 0L, SEEK_END);
+    file_size = _ftelli64(pFile);
+    fseek(pFile, 0L, SEEK_SET);
+
+    return file_size;
+}
+
 void CharAndFreq::SortExistChars(void)
 {
     SortExistChars(0, ExistCharsCount - 1);
@@ -663,50 +718,3 @@ void CharAndFreq::SortExistChars(int first, int last)
         SortExistChars((j + 1), last);
     }
 }
-
-void ReadFreqDatasFromFile(FILE* pFileToRead, CharAndFreq* pFreqDatas)
-{
-
-    for (int i = 0; i < 256; i++)
-    {
-        pFreqDatas->pFreqs[i] = 0;
-        pFreqDatas->pFreqSortedExistChars[i] = 0;
-    }
-    pFreqDatas->ExistCharsCount = 0;
-
-    fseek(pFileToRead, 0xe, SEEK_SET);
-    int exist_chars = fgetc(pFileToRead);
-    pFreqDatas->ExistCharsCount = exist_chars == 0 ? 256 : exist_chars;
-
-    int single_freq_data_bytes = fgetc(pFileToRead);
-
-    fseek(pFileToRead, 0x21, SEEK_SET);
-    for (int i = 0; i < pFreqDatas->ExistCharsCount; i++)
-    {
-        pFreqDatas->pFreqSortedExistChars[i] = fgetc(pFileToRead);
-        for (int j = 0; j < single_freq_data_bytes; j++)
-        {
-            pFreqDatas->pFreqs[pFreqDatas->pFreqSortedExistChars[i]] += fgetc(pFileToRead) << (8 * j);
-        }
-    }
-
-    // int c;
-    // for (int i = 0; i < pFreqDatas->ExistCharsCount; i++)
-    // {
-    //     c = pFreqDatas->pFreqSortedExistChars[i];
-    //     printf("%2X : %llu\n", c, pFreqDatas->pFreqs[c]);
-    // }
-}
-
-unsigned long long GetFileSize(FILE* pFile)
-{
-    unsigned long long file_size;
-
-    fseek(pFile, 0L, SEEK_END);
-    file_size = _ftelli64(pFile);
-    fseek(pFile, 0L, SEEK_SET);
-
-    return file_size;
-}
-
-
