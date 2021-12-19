@@ -562,7 +562,7 @@ void CharAndFreq::CountFreqFromFile(FILE* pFileToRead)
 {
 }
 
-void CharAndFreq::ReadFreqDataFromFIle(FILE* pFileToRead)
+void CharAndFreq::ReadFreqDataFromFile(FILE* pFileToRead)
 {
 }
 
