@@ -31,10 +31,10 @@ class CharAndFreq
         int pFreqSortedExistChars[256];
         int ExistCharsCount;
 
-        CharAndFreq::CharAndFreq();
+        CharAndFreq();
 
-        void CharAndFreq::CountFreqFromFile   (FILE* pFileToRead, long* pProgressPerMile = NULL);
-        void CharAndFreq::ReadFreqDataFromFIle(FILE* pFileToRead, long* pProgressPerMile = NULL);
+        void CountFreqFromFile   (FILE* pFileToRead, long* pProgressPermile = NULL);
+        void ReadFreqDataFromFIle(FILE* pFileToRead, long* pProgressPermile = NULL);
 };
 // TODO : class matomeru sort tokano kinou ituka
 
@@ -77,16 +77,16 @@ class HuffmanTree
         void BuildHuffmanTree(CharAndFreq* pFreqDatas);
 };
 
-void Encode(FILE* pFileToEncode, HuffmanTree* pHuffmanTree, FILE* pFileToWrite, long* pProgressPerMile = NULL);
-void Decode(FILE* pFileToDecode, HuffmanTree* pHuffmanTree, FILE* pFileToWrite, long* pProgressPerMile = NULL);
+void Encode(FILE* pFileToEncode, HuffmanTree* pHuffmanTree, FILE* pFileToWrite, long* pProgressPermile = NULL);
+void Decode(FILE* pFileToDecode, HuffmanTree* pHuffmanTree, FILE* pFileToWrite, long* pProgressPermile = NULL);
 
-void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgressPerMile = NULL);
-void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgressPerMile = NULL);
-
-
+void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgressPermile = NULL);
+void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgressPermile = NULL);
 
 
-void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgressPerMile)
+
+
+void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgressPermile)
 {
     CharAndFreq char_freq_data;
     char_freq_data.CountFreqFromFile(pFileSource);
@@ -99,7 +99,7 @@ void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgressPerMile)
     return;
 }
 
-void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgressPerMile)
+void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgressPermile)
 {
     CharAndFreq char_freq_data;
     char_freq_data.ReadFreqDatasFromFile(pFileSource);
@@ -548,6 +548,23 @@ void Decode(FILE* pFileToDecode, HuffmanTree* pHuffmanTree, FILE* pFileToWrite)
 
 
 
+CharAndFreq::CharAndFreq()
+{
+    for (int i = 0; i < 256; i++)
+    {
+        pFreqs[i] = 0;
+        pFreqSortedExistChars[i] = 0;
+    }
+    ExistCharsCount = 0;
+}
+
+void CharAndFreq::CountFreqFromFile(FILE* pFileToRead)
+{
+}
+
+void CharAndFreq::ReadFreqDataFromFIle(FILE* pFileToRead)
+{
+}
 
 void SortExistChars(CharAndFreq* pFreqDatas);
 void CountFreqFromFile    (FILE* pFileToRead, CharAndFreq* pFreqDatas)
