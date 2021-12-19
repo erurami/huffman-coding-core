@@ -22,10 +22,17 @@
 #define PI_EXT_DECODE_START 51
 #define PI_EXT_DECODE_END   100
 
+bool Print_Infos = false;
+
 
 class CharAndFreq
 {
     private:
+
+        void SortExistChars(int first, int last);
+        void SortExistChars(void);
+
+    public:
 
         unsigned long long pFreqs[256];
         int pFreqSortedExistChars[256];
@@ -33,8 +40,8 @@ class CharAndFreq
 
         CharAndFreq();
 
-        void CountFreqFromFile   (FILE* pFileToRead, long* pProgressPermile = NULL);
-        void ReadFreqDataFromFIle(FILE* pFileToRead, long* pProgressPermile = NULL);
+        void CountFreqFromFile   (FILE* pFileToRead, long* pProgressPermile = NULL, bool* pUpdateProgress = NULL);
+        void ReadFreqDataFromFile(FILE* pFileToRead, long* pProgressPermile = NULL, bool* pUpdateProgress = NULL);
 };
 // TODO : class matomeru sort tokano kinou ituka
 
@@ -68,7 +75,7 @@ class HuffmanTree
         int mLeafNodesLength;
         int mParentNodesLength;
 
-        bool mInitialized;
+        bool mTreeBuilt;
 
         HuffmanTree();
 
@@ -82,6 +89,8 @@ void Decode(FILE* pFileToDecode, HuffmanTree* pHuffmanTree, FILE* pFileToWrite, 
 
 void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgressPermile = NULL);
 void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgressPermile = NULL);
+
+unsigned long long GetFileSize(FILE* pFile);
 
 
 
@@ -102,7 +111,7 @@ void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgressPermile)
 void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgressPermile)
 {
     CharAndFreq char_freq_data;
-    char_freq_data.ReadFreqDatasFromFile(pFileSource);
+    char_freq_data.ReadFreqDataFromFile(pFileSource);
 
     HuffmanTree huffman_tree;
     huffman_tree.BuildHuffmanTree(&char_freq_data);
@@ -116,19 +125,9 @@ void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgressPermile)
 
 
 
-HuffmanTree::HuffmanTree(int LeafNodesLength)
+HuffmanTree::HuffmanTree()
 {
-    printf("initializing huffman tree... ");
-
-    mLeafNodesLength = LeafNodesLength;
-    mParentNodesLength = mLeafNodesLength - 1;
-
-    mpLeafNodes   = new HeapNode [mLeafNodesLength];
-    mpParentNodes = new HeapNode [mParentNodesLength];
-
-    mpRootNode = NULL;
-
-    printf("done.\n");
+    mTreeBuilt = false;
 }
 
 HuffmanTree::~HuffmanTree()
@@ -558,64 +557,111 @@ CharAndFreq::CharAndFreq()
     ExistCharsCount = 0;
 }
 
-void CharAndFreq::CountFreqFromFile(FILE* pFileToRead)
+void CharAndFreq::CountFreqFromFile(FILE* pFileToRead, long* pProgressPermile, bool* pUpdateProgress)
 {
-}
-
-void CharAndFreq::ReadFreqDataFromFile(FILE* pFileToRead)
-{
-}
-
-void SortExistChars(CharAndFreq* pFreqDatas);
-void CountFreqFromFile    (FILE* pFileToRead, CharAndFreq* pFreqDatas)
-{
-    unsigned long long file_size;
-    fseek(pFileToRead, 0L, SEEK_END);
-    file_size = _ftelli64(pFileToRead);
-    fseek(pFileToRead, 0L, SEEK_SET);
-
-    printf("file size : %llubytes\n", file_size);
-
-
-
-    for (int i = 0; i < 256; i++)
+    if ( pProgressPermile != NULL)
     {
-        pFreqDatas->pFreqs[i] = 0;
-        pFreqDatas->pFreqSortedExistChars[i] = 0;
-    }
-    pFreqDatas->ExistCharsCount = 0;
-
-
-
-    int c;
-    for (unsigned long long i = 0; i < file_size; i++)
-    {
-        c = fgetc(pFileToRead);
-        pFreqDatas->pFreqs[c]++;
+        *pProgressPermile = PI_COM_COUNTING_START;
     }
 
-    for (int i = 0; i < 256; i++)
+    unsigned long long file_size = GetFileSize(pFileToRead);
+
+
+
+
+
+    int character;
+    int counting_procrss_range_percent = PI_COM_COUNTING_END - PI_COM_COUNTING_START;
+
+    if (pUpdateProgress != NULL && pProgressPermile != NULL)
     {
-        if (pFreqDatas->pFreqs[i] >= 1)
+        for (unsigned long long i = 0; i < file_size; i++)
         {
-            pFreqDatas->pFreqSortedExistChars[pFreqDatas->ExistCharsCount] = i;
-            pFreqDatas->ExistCharsCount++;
+            character = fgetc(pFileToRead);
+            pFreqs[character]++;
+
+            if (*pUpdateProgress)
+            {
+                *pProgressPermile = \
+                PI_COM_COUNTING_START + counting_procrss_range_percent / file_size * i * 10;
+            }
         }
     }
 
-    printf("count finished!\n");
-    printf("%d characters found\n", pFreqDatas->ExistCharsCount);
-    printf("sorting..");
+    else
+    {
+        for (unsigned long long i = 0; i < file_size; i++)
+        {
+            character = fgetc(pFileToRead);
+            pFreqs[character]++;
+        }
+    }
 
-    SortExistChars(pFreqDatas);
 
-    printf("done\n");
 
-    // for (int i = 0; i < pFreqDatas->ExistCharsCount; i++)
-    // {
-    //     c = pFreqDatas->pFreqSortedExistChars[i];
-    //     printf("%2X : %llu\n", c, pFreqDatas->pFreqs[c]);
-    // }
+    for (int i = 0; i < 256; i++)
+    {
+        if (pFreqs[i] >= 1)
+        {
+            pFreqSortedExistChars[ExistCharsCount] = i;
+            ExistCharsCount++;
+        }
+    }
+
+    SortExistChars();
+}
+
+void CharAndFreq::ReadFreqDataFromFile(FILE* pFileToRead, long* pProgressPermile, bool* pUpdateProgress)
+{
+}
+
+void CharAndFreq::SortExistChars(void)
+{
+    SortExistChars(0, ExistCharsCount - 1);
+}
+
+void CharAndFreq::SortExistChars(int first, int last)
+{
+    int i, j;
+    unsigned long long pivot;
+    int tmp;
+
+    pivot = pFreqs[pFreqSortedExistChars[(first + last) / 2]];
+    i = first; j = last;
+
+    while (1)
+    {
+        while (pFreqs[pFreqSortedExistChars[i]] < pivot)
+        {
+            i++;
+        }
+
+        while (pivot < pFreqs[pFreqSortedExistChars[i]])
+        {
+            j--;
+        }
+
+        if (i >= j)
+        {
+            break;
+        }
+
+        tmp = pFreqSortedExistChars[i];
+        pFreqSortedExistChars[i] = pFreqSortedExistChars[j];
+        pFreqSortedExistChars[j] = tmp;
+
+        i++; j--;
+    }
+
+    if (first < (i - 1))
+    {
+        SortExistChars(first, (i - 1));
+    }
+
+    if (( j = 1) < last)
+    {
+        SortExistChars((j + 1), last);
+    }
 }
 
 void ReadFreqDatasFromFile(FILE* pFileToRead, CharAndFreq* pFreqDatas)
@@ -652,58 +698,15 @@ void ReadFreqDatasFromFile(FILE* pFileToRead, CharAndFreq* pFreqDatas)
     // }
 }
 
-
-void quickSort(CharAndFreq* pFreqDatas, int first, int last);
-void SortExistChars(CharAndFreq* pFreqDatas)
+unsigned long long GetFileSize(FILE* pFile)
 {
-    quickSort(pFreqDatas, 0, pFreqDatas->ExistCharsCount - 1);
+    unsigned long long file_size;
+
+    fseek(pFile, 0L, SEEK_END);
+    file_size = _ftelli64(pFile);
+    fseek(pFile, 0L, SEEK_SET);
+
+    return file_size;
 }
-
-void quickSort(CharAndFreq* pFreqDatas, int first, int last)
-{
-    int i, j;
-    unsigned long long pivot;
-    int tmp;
-
-    pivot = pFreqDatas->pFreqs[pFreqDatas->pFreqSortedExistChars[(first + last) / 2]];
-    i = first; j = last;
-
-    while (1)
-    {
-        while (pFreqDatas->pFreqs[pFreqDatas->pFreqSortedExistChars[i]] < pivot)
-        {
-            i++;
-        }
-        while (pivot < pFreqDatas->pFreqs[pFreqDatas->pFreqSortedExistChars[j]])
-        {
-            j--;
-        }
-
-        if (i >= j)
-        {
-            break;
-        }
-
-        tmp = pFreqDatas->pFreqSortedExistChars[i];
-        pFreqDatas->pFreqSortedExistChars[i] = pFreqDatas->pFreqSortedExistChars[j];
-        pFreqDatas->pFreqSortedExistChars[j] = tmp;
-
-        i++; j--;
-    }
-
-    if (first < (i - 1))
-    {
-        quickSort(pFreqDatas, first, (i - 1));
-    }
-
-    if ((j + 1) < last)
-    {
-        quickSort(pFreqDatas, (j + 1), last);
-    }
-}
-
-
-
-
 
 
