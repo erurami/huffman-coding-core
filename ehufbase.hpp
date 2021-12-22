@@ -1,10 +1,12 @@
 
 #pragma once
 
-bool Print_Infos = false;
+bool k_Print_Infomations = false;
 
+#define NODETYPE_LEAF 1
+#define NODETYPE_PARENT 2
 
-class CharAndFreq
+class FreqData
 {
     private:
 
@@ -13,11 +15,11 @@ class CharAndFreq
 
     public:
 
-        unsigned long long pFreqs[256];
-        int pFreqSortedExistChars[256];
-        int ExistCharsCount;
+        unsigned long long pFreqs_[256];
+        int pFreqSortedExistChars_[256];
+        int ExistCharsCount_;
 
-        CharAndFreq();
+        FreqData();
 
         void CountFreqFromFile   (FILE* pFileToRead, long* pProgressPermile = NULL, bool* pUpdateProgress = NULL);
         void ReadFreqDataFromFile(FILE* pFileToRead, long* pProgressPermile = NULL, bool* pUpdateProgress = NULL);
@@ -53,15 +55,15 @@ class HuffmanTree
         };
 
 
-        HeapNode* mpLeafNodes;
-        HeapNode* mpParentNodes;
+        HeapNode* pLeafNodes_;
+        HeapNode* pParentNodes_;
 
-        HeapNode* mpRootNode;
+        HeapNode* pRootNode_;
 
-        int mLeafNodesLength;
-        int mParentNodesLength;
+        int LeafNodesLength_;
+        int ParentNodesLength_;
 
-        bool mTreeBuilt;
+        bool HasTreeBuilt_;
 
         HuffmanTree();
 
@@ -70,15 +72,18 @@ class HuffmanTree
         void BuildHuffmanTree(CharAndFreq* pFreqDatas);
 
         void MakeConvertionTable();
+
+        void Encode(FILE* pFileToEncode, FILE* pFileToWrite,
+                    long* pProgressPermile = NULL);
+
+        void Decode(FILE* pFileToDecode, FILE* pFileToWrite,
+                    long* pProgressPermile = NULL);
 };
 
-void Encode(FILE* pFileToEncode, HuffmanTree* pHuffmanTree, FILE* pFileToWrite, long* pProgressPermile = NULL);
-void Decode(FILE* pFileToDecode, HuffmanTree* pHuffmanTree, FILE* pFileToWrite, long* pProgressPermile = NULL);
+
 
 void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgressPermile = NULL);
 void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgressPermile = NULL);
-
-unsigned long long GetFileSize(FILE* pFile);
 
 
 #include "ehufbace.ipp"
