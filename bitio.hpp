@@ -40,6 +40,9 @@ namespace Bitio
             File();
             ~File();
 
+            long TellBits (void);
+            long TellBytes(void);
+
             void SeekBits (int position);
             void SeekBytes(int position);
 
@@ -61,6 +64,11 @@ Bitio::File::File()
 {
     DidFileLoaded_ = false;
     pFile_ = NULL;
+
+    for (int i = 0; i < 8; i++)
+    {
+        pBitsBufToPut_[i] = false;
+    }
 }
 
 Bitio::File::~File()
@@ -71,7 +79,10 @@ Bitio::File::~File()
     }
     else if (DidFileLoaded_ == true && OpeningMode_ == FILE_INFO_WRITE)
     {
-        PutBitsInBuf();
+        if (BitPosition_ != 0)
+        {
+            PutBitsInBuf();
+        }
         fclose(pFile_);
     }
 }
@@ -79,6 +90,16 @@ Bitio::File::~File()
 
 
 
+
+long Bitio::File::TellBits(void)
+{
+    return BitPosition_;
+}
+
+long Bitio::File::TellBytes(void)
+{
+    return Position_;
+}
 
 void Bitio::File::SeekBits(int position)
 {
@@ -88,10 +109,23 @@ void Bitio::File::SeekBits(int position)
 
 void Bitio::File::SeekBytes(int position)
 {
+    if (DidFileLoaded_ == false)
+    {
+        return;
+    }
+
+    if (OpeningMode_ == FILE_INFO_WRITE)
+    {
+        PutBitsInBuf();
+    }
+
     Position_ = position;
     _fseeki64(pFile_, Position_, SEEK_SET);
 
-    ReadNextAndCalcBits();
+    if (OpeningMode_ == FILE_INFO_READ)
+    {
+        ReadNextAndCalcBits();
+    }
 }
 
 
@@ -158,11 +192,7 @@ void Bitio::File::PutBit(bool bit)
 
     if (BitPosition_ == 8)
     {
-        Position_++;
-
         PutBitsInBuf();
-
-        BitPosition_ = 0;
     }
 }
 
@@ -204,6 +234,11 @@ void Bitio::File::PutChar(int character)
     {
         return;
     }
+    if (BitPosition_ != 0)
+    {
+        PutBitsInBuf();
+    }
+    Position_++;
     fputc(character, pFile_);
 }
 
@@ -287,15 +322,11 @@ void Bitio::File::PutBitsInBuf(void)
         if (pBitsBufToPut_[i])
         {
             char_to_put++;
-            printf("1\n");
-        }
-        else
-        {
-            printf("0\n");
         }
         pBitsBufToPut_[i] = false;
     }
-    printf("%d\n", char_to_put);
 
-    PutChar(char_to_put);
+    Position_++;
+    BitPosition_ = 0;
+    fputc(char_to_put, pFile_);
 }

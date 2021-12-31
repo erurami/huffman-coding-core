@@ -20,17 +20,20 @@ offset to tree data data
 offset to main data
 
 
-0x0d to 0x0f
+0x0d to 0x0e
 bits of tree structure data
 
-0x10 to 0x11
+0x0f to 0x10
 bytes of tree data data
 
-0x12 to 0x19
-bits of main data
+0x11 to 0x14
+bytes of main data
+
+0x15
+bits used in last byte od main data.
 
 
-from 0x1a
+from 0x16
 tree structure data (binary)
     0 means leaf 1 means branch.
     if you can't understand, read the code!
