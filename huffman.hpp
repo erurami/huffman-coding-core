@@ -1,81 +1,65 @@
 
 #pragma once
 
-bool k_Print_Infomations = false;
 
-#define NODETYPE_LEAF 1
-#define NODETYPE_PARENT 2
-
-
-
-class HuffmanTree
+struct HuffmanTreeNode
 {
 
-    public:
+    int NodeType;
+    // 1 : Parent
+    // 2 : Leaf
 
-        struct HeapNode
-        {
-            char NodeType;
-            // 1 : Leaf
-            // 2 : Parent
+    unsigned long long int Freq;
 
-            unsigned long long Freq;
-            HeapNode* pParent;
+    int Data;
 
-            // for leaf node
-            int Data;
+    HuffmanTreeNode* pRight;
+    HuffmanTreeNode* pLeft;
+};
 
-            // for parent node
-            HeapNode* pRightNode;
-            HeapNode* pLeftNode;
-        };
+struct HuffmanTree
+{
 
-        struct ConvertionTable
-        {
-            bool Codes[256][256];
-            bool IsCodeExists[256];
-            int  CharCodeLength[256];
-        };
+    HuffmanTreeNode* pLeafNodes;
+    HuffmanTreeNode* pParentNodes;
 
+    HuffmanTreeNode* pRootNode;
 
-        HeapNode* pLeafNodes_;
-        HeapNode* pParentNodes_;
-
-        HeapNode* pRootNode_;
-
-        int LeafNodesLength_;
-        int ParentNodesLength_;
-
-        int TreeBuildingProgress;
-
-        #define TREE_PROG_1 1
-        #define TREE_PROG_2 2
-        #define TREE_PROG_1 1
-        #define TREE_PROG_2 2
-
-        HuffmanTree();
-
-        ~HuffmanTree();
-
-        void CountFreq(FILE* pFileToCount);
-        void ReadFreqDatas(FILE* pFileToRead);
-
-        void BuildHuffmanTree(CharAndFreq* pFreqDatas);
-
-        void MakeConvertionTable();
-
-        void Encode(FILE* pFileToEncode, FILE* pFileToWrite,
-                    long* pProgressPermile = NULL);
-
-        void Decode(FILE* pFileToDecode, FILE* pFileToWrite,
-                    long* pProgressPermile = NULL);
+    int LeafNodeLength;
 };
 
 
 
-void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgressPermile = NULL);
-void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgressPermile = NULL);
+void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL);
 
 
-#include "ehufbace.ipp"
+void CountFreq(FILE* pFileToCount, unsigned long long *pFreqDes);
+
+void BuildHuffmanTree(unsigned long long *pFreqs, HuffmanTree* pHuffmanTree);
+
+void WriteHuffmanTree(FILE* pFileToWrite, HuffmanTree* pHuffmanTree);
+void WriteMainData   (FILE* pFileToWrite, HuffmanTree* pHuffmanTree, FILE* pSourceFile);
+
+
+
+
+
+void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL);
+
+
+void ReadTree(FILE* pFileToRead, HuffmanTree* pHuffmanTree);
+
+void Decode(FILE* pFileSource, FILE* pFileToWrite, HuffmanTree* pHuffmanTree);
+
+
+
+
+// class ProgressManager
+// {
+// };
+
+void SetPrintInfos(bool printOrNot);
+
+
+#include "huffman.ipp"
 

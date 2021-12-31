@@ -168,7 +168,7 @@ void Bitio::File::PutBit(bool bit)
 
 
 
-void Bitio::FilePutBits(bool* pBits, int putBits)
+void Bitio::File::PutBits(bool* pBits, int putBits)
 {
     if (DidFileLoaded_ == false ||
         OpeningMode_   != FILE_INFO_WRITE)

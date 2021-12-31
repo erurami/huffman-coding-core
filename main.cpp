@@ -1,5 +1,5 @@
 
-#include "ehufbase.hpp"
+#include "huffman.hpp"
 #include <string.h>
 #include <stdlib.h>
 
