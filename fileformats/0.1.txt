@@ -7,14 +7,36 @@ HF
 1
 (version)
 
-0x03～0x06
+0x03 to 0x06
 filesize
 
-0x07～0x08
+0x07 to 0x08
 offset to tree structure data
 
-0x09～0x0a
+0x09 to 0x0a
 offset to tree data data
 
-0x0b～0x0c
+0x0b to 0x0c
 offset to main data
+
+
+0x0d to 0x0f
+bits of tree structure data
+
+0x10 to 0x11
+bytes of tree data data
+
+0x12 to 0x19
+bits of main data
+
+
+from 0x1a
+tree structure data (binary)
+    0 means leaf 1 means branch.
+    if you can't understand, read the code!
+
+tree data data
+    the character data is lining up by the order of the '0' in structure data (first 0(leaf) node's data is in the first in this section, second 0's data is in the second...)
+
+main data
+    look at huffman coding tutorial! so that you can understand
