@@ -622,7 +622,6 @@ void Decode(FILE* pFileSource, FILE* pFileToWrite, HuffmanTree* pHuffmanTree, Fi
     {
 
         bit_just_read = file_source.GetBit();
-        printf("%d", bit_just_read);
 
         if (bit_just_read == true)
         {
