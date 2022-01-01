@@ -1,7 +1,13 @@
 
 #pragma once
 
-#include "bitio.hpp"
+
+
+void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL);
+void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL);
+
+
+
 
 struct HuffmanTreeNode
 {
@@ -19,6 +25,7 @@ struct HuffmanTreeNode
     HuffmanTreeNode* pRight;
     HuffmanTreeNode* pLeft;
 };
+
 
 struct HuffmanTree
 {
@@ -49,9 +56,13 @@ struct FileHeaderData
 
 
 
-void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL);
+
+#include "bitio.hpp"
 
 
+// --------------- //
+//   compressing   //
+// --------------- //
 void CountFreq(FILE* pFileToCount, unsigned long long *pFreqDes);
 
 void BuildHuffmanTree(unsigned long long *pFreqs, HuffmanTree* pHuffmanTree);
@@ -64,9 +75,9 @@ void WriteHeaderData (Bitio::File* pFileToWrite,                                
 
 
 
-void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL);
-
-
+// --------------- //
+//    extracting   //
+// --------------- //
 void ReadHeaderData(FILE* pFile, FileHeaderData* pFileData);
 
 void ReadHuffmanTree(FILE* pFileToRead, HuffmanTree* pHuffmanTree, FileHeaderData* pFileData);
@@ -76,11 +87,29 @@ void Decode(FILE* pFileSource, FILE* pFileToWrite, HuffmanTree* pHuffmanTree, Fi
 
 
 
+
+
 // class ProgressManager
 // {
 // };
 
+
+// unavailable : this variable doesn't effect any.
+bool G_Print_Infomations = false;
+
 void SetPrintInfos(bool printOrNot);
+
+
+
+
+
+unsigned long long GetFileSize(FILE* pFile);
+
+// for debugging
+void PrintHuffmanTree(HuffmanTree* p_huffman_tree);
+
+
+
 
 
 #include "huffman.ipp"
