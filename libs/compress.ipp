@@ -1,38 +1,52 @@
 
 #pragma once
 
-#include "bitio.hpp"
-#include <stdio.h>
-#include <string.h>
-
-
-// unavailable this variable doesn't effect any.
-bool G_Print_Infomations = false;
-
-
-unsigned long long GetFileSize(FILE* pFile);
-
-
-
-// for debugging
-void PrintHuffmanTree(HuffmanTree* p_huffman_tree);
-
 
 bool G_Reset_WriteNode_Static_Vars = false;
 
+bool G_Use_Progress;
+ProgressManagerCompression G_Progress_manager;
 
-void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgress)
+
+
+
+#define BUILD_HUFFMAN_TREE(huffman_tree, source_file) \
+    {\
+    unsigned long long freqs[256] = {0};\
+    CountFreq(source_file, freqs);\
+\
+    BuildHuffmanTree(freqs, &huffman_tree);\
+    }
+
+
+void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgress, void (*pTimerFunc)(long, int))
 {
     G_Reset_WriteNode_Static_Vars = true;
 
-    unsigned long long freqs[256] = {0};
-    CountFreq(pFileSource, freqs);
+
+
+    if (pProgress == NULL)
+    {
+        G_Use_Progress = false;
+    }
+    else
+    {
+        G_Use_Progress = true;
+        G_Progress_manager.pProgressPartsPerMillion = pProgress;
+        G_Progress_manager.pTimerFunc = pTimerFunc;
+    }
+
+
 
     HuffmanTree huffman_tree;
-    BuildHuffmanTree(freqs, &huffman_tree);
+
+    BUILD_HUFFMAN_TREE(huffman_tree, pFileSource);
+
+
 
     // PrintHuffmanTree(&huffman_tree);
     // printf("================================\n");
+
 
     Bitio::File file_to_write;
     file_to_write.UseFileObj(pFileTo, "w");
@@ -48,12 +62,32 @@ void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgress)
 
 
 
+
+
+
+
+
 void CountFreq(FILE* pFileToCount, unsigned long long *pFreqDes)
 {
+    if (G_Use_Progress)
+    {
+        G_Progress_manager.UpdateProg(COMPRESSION_STEP_READFREQ, 0, 1);
+    }
 
     unsigned long long file_size = GetFileSize(pFileToCount);
 
     fseek(pFileToCount, 0L, SEEK_SET);
+
+    if (G_Use_Progress)
+    {
+        // TODO : Update when only nessesary.
+        for (unsigned long long i = 0; i < file_size; i++)
+        {
+            G_Progress_manager.UpdateProg(COMPRESSION_STEP_READFREQ, i+1, file_size);
+            pFreqDes[fgetc(pFileToCount)]++;
+        }
+        return;
+    }
 
     for (unsigned long long i = 0; i < file_size; i++)
     {
@@ -63,10 +97,13 @@ void CountFreq(FILE* pFileToCount, unsigned long long *pFreqDes)
 
 
 
+
+
 void SortMinHeap    (HuffmanTreeNode** minHeap, int minHeapLength);
 void InsertToMinHeap(HuffmanTreeNode** minHeap, int minHeapLength, HuffmanTreeNode* pNodeToInsert);
 void BuildHuffmanTree(unsigned long long *pFreqs, HuffmanTree* pHuffmanTree)
 {
+    G_Progress_manager.UpdateProg(COMPRESSION_STEP_BUILDTREE, 0, 1);
 
     int exist_chars = 0;
 
@@ -136,6 +173,8 @@ void BuildHuffmanTree(unsigned long long *pFreqs, HuffmanTree* pHuffmanTree)
 
         index++;
     }
+
+    G_Progress_manager.UpdateProg(COMPRESSION_STEP_BUILDTREE, 1, 1);
 }
 
 
@@ -257,10 +296,13 @@ void InsertToMinHeap(HuffmanTreeNode** minHeap, int minHeapLength, HuffmanTreeNo
 
 
 
-
 long WriteNode(Bitio::File* pFileToWrite, HuffmanTreeNode* pNode, int* pCharsAppered);
 void WriteHuffmanTree(Bitio::File* pFileToWrite, HuffmanTree* pHuffmanTree, FileHeaderData* pFileData)
 {
+    G_Progress_manager.UpdateProg(COMPRESSION_STEP_WRITEINFO1  , 0, 1);
+
+
+
     int offset_tree_data;
     int offset_main_data;
 
@@ -293,6 +335,9 @@ void WriteHuffmanTree(Bitio::File* pFileToWrite, HuffmanTree* pHuffmanTree, File
     pFileData->BitsTreeStructure   = bits_of_tree_structure;
     pFileData->BytesTreeData       = pHuffmanTree->LeafNodeLength;
 
+
+
+    G_Progress_manager.UpdateProg(COMPRESSION_STEP_WRITEINFO1  , 1, 1);
 }
 
 long WriteNode(Bitio::File* pFileToWrite, HuffmanTreeNode* pNode, int* pCharsAppered)
@@ -333,6 +378,9 @@ long WriteNode(Bitio::File* pFileToWrite, HuffmanTreeNode* pNode, int* pCharsApp
 void MakeConvertionTable(HuffmanTree* pHuffmanTree, bool* pConvertionTable, int* pConvertionTableLengthes);
 void WriteMainData   (Bitio::File* pFileToWrite, HuffmanTree* pHuffmanTree, FILE* pSourceFile, FileHeaderData* pFileData)
 {
+    G_Progress_manager.UpdateProg(COMPRESSION_STEP_ENCODE, 0, 1);
+
+
     bool convertion_table[256][256];
     int  convertion_table_lengthes[256];
 
@@ -359,11 +407,29 @@ void WriteMainData   (Bitio::File* pFileToWrite, HuffmanTree* pHuffmanTree, FILE
     unsigned long long file_size = GetFileSize(pSourceFile);
 
     int character;
-    for (unsigned long long i = 0; i < file_size; i++)
+
+
+
+    if (G_Use_Progress)
     {
-        character = fgetc(pSourceFile);
-        pFileToWrite->PutBits(&convertion_table[character][0], convertion_table_lengthes[character]);
+        // TODO : Update when only nessesary.
+        for (unsigned long long i = 0; i < file_size; i++)
+        {
+            G_Progress_manager.UpdateProg(COMPRESSION_STEP_ENCODE, i+1, file_size);
+            character = fgetc(pSourceFile);
+            pFileToWrite->PutBits(&convertion_table[character][0], convertion_table_lengthes[character]);
+        }
     }
+    else
+    {
+        for (unsigned long long i = 0; i < file_size; i++)
+        {
+            character = fgetc(pSourceFile);
+            pFileToWrite->PutBits(&convertion_table[character][0], convertion_table_lengthes[character]);
+        }
+    }
+
+
 
     // XXX : TellBytes is supporting only 32bit intager.
     pFileData->FileSize           = pFileToWrite->TellBytes();
@@ -388,8 +454,9 @@ void WriteMainData   (Bitio::File* pFileToWrite, HuffmanTree* pHuffmanTree, FILE
 
     // printf("FileSize            : %llx\n", pFileData->FileSize           );
 
-}
 
+    G_Progress_manager.UpdateProg(COMPRESSION_STEP_ENCODE, 1, 1);
+}
 
 void MakeConvertionTable(HuffmanTree* pHuffmanTree, bool* pConvertionTable, int* pConvertionTableLengthes)
 {
@@ -418,14 +485,12 @@ void MakeConvertionTable(HuffmanTree* pHuffmanTree, bool* pConvertionTable, int*
     }
 }
 
-
-
-
-
-
 void WriteNumber(Bitio::File* pFileToWrite, long long number, int bits);
 void WriteHeaderData(Bitio::File* pFileToWrite, FileHeaderData* pFileData)
 {
+    G_Progress_manager.UpdateProg(COMPRESSION_STEP_WRITEINFO2, 0, 1);
+
+
     pFileToWrite->SeekBytes(0);
 
     pFileToWrite->PutChar('H');
@@ -444,6 +509,8 @@ void WriteHeaderData(Bitio::File* pFileToWrite, FileHeaderData* pFileData)
     WriteNumber(pFileToWrite, pFileData->BytesMainData      , 4);
 
     pFileToWrite->PutChar(pFileData->BitsUsedInLastByte);
+
+    G_Progress_manager.UpdateProg(COMPRESSION_STEP_WRITEINFO2, 1, 1);
 }
 
 void WriteNumber(Bitio::File* pFileToWrite, long long number, int bits)
@@ -457,235 +524,3 @@ void WriteNumber(Bitio::File* pFileToWrite, long long number, int bits)
 
 
 
-
-
-void Extract(FILE* pFileSource, FILE* pFileTo, long* pProgress)
-{
-    // G_Reset_  _Static_Vars = true;
-
-    FileHeaderData file_data;
-
-    ReadHeaderData(pFileSource, &file_data);
-
-    HuffmanTree huffman_tree;
-    ReadHuffmanTree(pFileSource, &huffman_tree, &file_data);
-
-    // PrintHuffmanTree(&huffman_tree);
-
-    Decode(pFileSource, pFileTo, &huffman_tree, &file_data);
-}
-
-
-
-long long ReadNumber(FILE* pFile, int numberLocation, int maxNumberToGet);
-void ReadHeaderData(FILE* pFile, FileHeaderData* pFileData)
-{
-
-    pFileData->OffsetTreeStructure = ReadNumber(pFile, 0x07, 2);
-    pFileData->OffsetTreeData      = ReadNumber(pFile, 0x09, 2);
-    pFileData->OffsetMainData      = ReadNumber(pFile, 0x0b, 2);
-
-    pFileData->BitsTreeStructure   = ReadNumber(pFile, 0x0d, 2);
-    pFileData->BytesTreeData       = ReadNumber(pFile, 0x0f, 2);
-    pFileData->BytesMainData       = ReadNumber(pFile, 0x11, 4);
-
-    pFileData->BitsUsedInLastByte  = ReadNumber(pFile, 0x15, 1);
-
-    pFileData->FileSize            = ReadNumber(pFile, 0x03, 4);
-}
-
-long long ReadNumber(FILE* pFile, int numberLocation, int maxNumberToGet)
-{
-    fseek(pFile, numberLocation, SEEK_SET);
-
-    long long Value = 0;
-    for (int i = 0; i < maxNumberToGet; i++)
-    {
-        Value += fgetc(pFile) << (8 * i);
-    }
-    return Value;
-}
-
-HuffmanTreeNode* ReadBranch(Bitio::File* pFileToRead, HuffmanTree* pHuffmanTree);
-void ReadHuffmanTree(FILE* pFileToRead, HuffmanTree* pHuffmanTree, FileHeaderData* pFileData)
-{
-    fseek(pFileToRead, 0x0d, SEEK_SET);
-
-    int exist_chars = pFileData->BitsTreeStructure;
-
-    exist_chars += 1;
-    exist_chars /= 2;
-
-    // printf("%d\n", exist_chars);
-
-    pHuffmanTree->pLeafNodes     = new HuffmanTreeNode [exist_chars];
-    pHuffmanTree->pParentNodes   = new HuffmanTreeNode [exist_chars - 1];
-    pHuffmanTree->LeafNodeLength = exist_chars;
-
-    Bitio::File file_to_read_bitio;
-    file_to_read_bitio.UseFileObj(pFileToRead, "r");
-
-    file_to_read_bitio.SeekBytes(pFileData->OffsetTreeStructure);
-
-    pHuffmanTree->pRootNode = ReadBranch(&file_to_read_bitio, pHuffmanTree);
-
-
-    // printf("OffsetTreeStructure : %x\n"  , pFileData->OffsetTreeStructure);
-    // printf("OffsetTreeData      : %x\n"  , pFileData->OffsetTreeData     );
-    // printf("OffsetMainData      : %x\n"  , pFileData->OffsetMainData     );
-
-    // printf("\n");
-
-    // printf("BitsTreeStructure   : %lx\n" , pFileData->BitsTreeStructure  );
-    // printf("BytesTreeData       : %lx\n" , pFileData->BytesTreeData      );
-    // printf("BytesMainData       : %lx\n" , pFileData->BytesMainData      );
-
-    // printf("\n");
-
-    // printf("BitsUsedInLastByte  : %x\n"  , pFileData->BitsUsedInLastByte );
-
-    // printf("\n");
-
-    // printf("FileSize            : %llx\n", pFileData->FileSize           );
-
-
-    file_to_read_bitio.SeekBytes(pFileData->OffsetTreeData);
-    for (int i = 0; i < pHuffmanTree->LeafNodeLength; i++)
-    {
-        pHuffmanTree->pLeafNodes[i].Data = file_to_read_bitio.GetChar();
-    }
-
-}
-
-HuffmanTreeNode* ReadBranch(Bitio::File* pFileToRead, HuffmanTree* pHuffmanTree)
-{
-
-    static int huffman_tree_parent_index = 0;
-    static int huffman_tree_leaf_index   = 0;
-
-    // if (G_Reset_ReadBranch_Static_Vars)
-    // {
-    //     huffman_tree_parent_index = 0;
-    //     huffman_tree_leaf_index   = 0;
-    //     G_Reset_ReadBranch_Static_Vars = false;
-    // }
-
-    bool bit_just_read = pFileToRead->GetBit();
-
-    HuffmanTreeNode  new_node;
-    HuffmanTreeNode* p_new_node;
-
-    if (bit_just_read == true)
-    {
-
-        new_node.NodeType = 1;
-
-        new_node.pLeft  = ReadBranch(pFileToRead, pHuffmanTree);
-        new_node.pRight = ReadBranch(pFileToRead, pHuffmanTree);
-
-        pHuffmanTree->pParentNodes[huffman_tree_parent_index] = new_node;
-
-        p_new_node = &pHuffmanTree->pParentNodes[huffman_tree_parent_index];
-
-        huffman_tree_parent_index++;
-    }
-    else
-    {
-        new_node.NodeType = 2;
-
-        pHuffmanTree->pLeafNodes[huffman_tree_leaf_index]     = new_node;
-
-        p_new_node = &pHuffmanTree->pLeafNodes[huffman_tree_leaf_index];
-
-        huffman_tree_leaf_index++;
-    }
-
-    return p_new_node;
-}
-
-void Decode(FILE* pFileSource, FILE* pFileToWrite, HuffmanTree* pHuffmanTree, FileHeaderData* pFileData)
-{
-    long long bytes_left_in_main_data = pFileData->BytesMainData;
-    int       bits_left_in_main_data  = pFileData->BitsUsedInLastByte;
-
-    Bitio::File file_source;
-    file_source.UseFileObj(pFileSource, "r");
-
-    file_source.SeekBytes(pFileData->OffsetMainData);
-
-    bool bit_just_read;
-
-
-    HuffmanTreeNode current_node = *pHuffmanTree->pRootNode;
-
-    for ( ; bytes_left_in_main_data > 0 || bits_left_in_main_data > 0; )
-    {
-
-        bit_just_read = file_source.GetBit();
-
-        if (bit_just_read == true)
-        {
-            current_node = *current_node.pRight;
-        }
-        else
-        {
-            current_node = *current_node.pLeft;
-        }
-
-
-        if (current_node.NodeType == 2)
-        {
-            fputc(current_node.Data, pFileToWrite);
-            current_node = *pHuffmanTree->pRootNode;
-        }
-
-
-        bits_left_in_main_data--;
-        if (bits_left_in_main_data == 0 && bytes_left_in_main_data > 0)
-        {
-            bytes_left_in_main_data--;
-            bits_left_in_main_data = 8;
-        }
-    }
-}
-
-
-
-unsigned long long GetFileSize(FILE* pFile)
-{
-    fseek(pFile, 0L, SEEK_END);
-    unsigned long long file_size = ftell(pFile);
-    fseek(pFile, 0L, SEEK_SET);
-
-    return file_size;
-}
-
-void PrintNode(HuffmanTreeNode* pNode);
-void PrintHuffmanTree(HuffmanTree* pHuffmanTree)
-{
-    PrintNode(pHuffmanTree->pRootNode);
-}
-
-void PrintNode(HuffmanTreeNode* pNode)
-{
-    static int depth = 0;
-
-    if (pNode->NodeType == 1)
-    {
-        depth++; PrintNode(pNode->pLeft); depth--;
-    }
-
-    if (pNode->NodeType == 2)
-    {
-        printf("%*c%2x\n", 5 * depth, ' ', pNode->Data);
-    }
-    else
-    {
-        printf("%*cin\n", 5 * depth, ' ');
-    }
-
-    if (pNode->NodeType == 1)
-    {
-        depth++; PrintNode(pNode->pRight); depth--;
-    }
-}
