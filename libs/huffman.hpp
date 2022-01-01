@@ -3,8 +3,8 @@
 
 
 
-void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL);
-void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL);
+void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL, void (*pTimerFunc)(long, int) = NULL);
+void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL, void (*pTimerFunc)(long, int) = NULL);
 
 
 
@@ -115,7 +115,12 @@ class ProgressManagerCompression
 
     public:
 
+        /// timer JANAI!
+        //  it's not a timer function!
+        void (*pTimerFunc)(long, int);
         long* pProgressPartsPerMillion;
+
+        int  StepNow;
 
         void UpdateProg(int CompressionStep, long Progress, long Total);
 };
@@ -127,7 +132,10 @@ class ProgressManagerExtraction
 
     public:
 
+        void (*pTimerFunc)(long, int);
         long* pProgressPartsPerMillion;
+
+        int  StepNow;
 
         void UpdateProg(int ExtractionStep, long Progress, long Total);
 };

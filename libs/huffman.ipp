@@ -113,6 +113,13 @@ void ProgressManagerCompression::UpdateProg(int CompressionStep, long Progress, 
                 COMPRESSION_WRITING2_TOTAL_PROG * Progress / Total;
             break;
     }
+
+    StepNow = CompressionStep;
+
+    if (pTimerFunc != NULL)
+    {
+        (*pTimerFunc)(*pProgressPartsPerMillion, StepNow);
+    }
 }
 
 
@@ -145,5 +152,12 @@ void ProgressManagerExtraction::UpdateProg(int ExtractionStep, long Progress, lo
                 EXTRACTION_DECODING_TOTAL_PROG * Progress / Total;
 
             break;
+    }
+
+    StepNow = ExtractionStep;
+
+    if (pTimerFunc != NULL)
+    {
+        (*pTimerFunc)(*pProgressPartsPerMillion, StepNow);
     }
 }
