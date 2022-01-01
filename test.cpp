@@ -27,25 +27,45 @@ int main()
 
 
 
-    if (fopen_s(&p_file1, "test1.txt"     , "rb") != 0)
+    FILE* p_file3;
+    FILE* p_file4;
+
+    if (fopen_s(&p_file3, "test1.txt"     , "rb") != 0)
     {
         printf("error loading test1.txt\n");
         return -1;
     }
-    if (fopen_s(&p_file2, "test1.txt.ehuf", "wb") != 0)
+    if (fopen_s(&p_file4, "test1.txt.ehuf", "wb") != 0)
     {
         printf("error loading test1.txt.ehuf\n");
         return -1;
     }
 
-    Compress(p_file1, p_file2);
+    Compress(p_file3, p_file4);
 
-    fclose(p_file1);
-    fclose(p_file2);
+    fclose(p_file3);
+    fclose(p_file4);
 
-    printf("a\n");
 
-    printf("ê≥èÌèIóπ\n");
+
+    FILE* p_file5;
+    FILE* p_file6;
+
+    if (fopen_s(&p_file5, "test.txt.ehuf", "rb") != 0)
+    {
+        printf("error loading test1.txt\n");
+        return -1;
+    }
+    if (fopen_s(&p_file6, "test.txt.ehuf.txt", "wb") != 0)
+    {
+        printf("error loading test1.txt.ehuf\n");
+        return -1;
+    }
+
+    Extract(p_file5, p_file6);
+
+    fclose(p_file5);
+    fclose(p_file6);
 
     return 0;
 }

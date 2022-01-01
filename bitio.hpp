@@ -75,7 +75,7 @@ Bitio::File::~File()
 {
     if (DidFileLoaded_ == true && OpeningMode_ == 1)
     {
-        fclose(pFile_);
+        //fclose(pFile_);
     }
     else if (DidFileLoaded_ == true && OpeningMode_ == FILE_INFO_WRITE)
     {
@@ -83,7 +83,8 @@ Bitio::File::~File()
         {
             PutBitsInBuf();
         }
-        fclose(pFile_);
+        // TODO:when the file was loaded by open, it should be closed
+        //fclose(pFile_);
     }
 }
 
@@ -124,7 +125,7 @@ void Bitio::File::SeekBytes(int position)
 
     if (OpeningMode_ == FILE_INFO_READ)
     {
-        ReadNextAndCalcBits();
+        BitPosition_ = 8;
     }
 }
 

@@ -67,9 +67,11 @@ void WriteHeaderData (Bitio::File* pFileToWrite,                                
 void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL);
 
 
-void ReadTree(FILE* pFileToRead, HuffmanTree* pHuffmanTree);
+void ReadHeaderData(FILE* pFile, FileHeaderData* pFileData);
 
-void Decode(FILE* pFileSource, FILE* pFileToWrite, HuffmanTree* pHuffmanTree);
+void ReadHuffmanTree(FILE* pFileToRead, HuffmanTree* pHuffmanTree, FileHeaderData* pFileData);
+
+void Decode(FILE* pFileSource, FILE* pFileToWrite, HuffmanTree* pHuffmanTree, FileHeaderData* pFileData);
 
 
 
