@@ -8,13 +8,13 @@ int main()
     FILE* p_file1;
     FILE* p_file2;
 
-    if (fopen_s(&p_file1, "test.txt"     , "rb") != 0)
+    if (fopen_s(&p_file1, "samples\\test1.txt"     , "rb") != 0)
     {
         printf("error loading test.txt\n");
         return -1;
     }
 
-    if (fopen_s(&p_file2, "test.txt.huff", "wb") != 0)
+    if (fopen_s(&p_file2, "samples\\test1.txt.huff", "wb") != 0)
     {
         printf("error loading test.txt.ehuf\n");
         return -1;
@@ -30,12 +30,12 @@ int main()
     FILE* p_file3;
     FILE* p_file4;
 
-    if (fopen_s(&p_file3, "test1.txt"     , "rb") != 0)
+    if (fopen_s(&p_file3, "samples\\test2.txt"     , "rb") != 0)
     {
         printf("error loading test1.txt\n");
         return -1;
     }
-    if (fopen_s(&p_file4, "test1.txt.huff", "wb") != 0)
+    if (fopen_s(&p_file4, "samples\\test2.txt.huff", "wb") != 0)
     {
         printf("error loading test1.txt.ehuf\n");
         return -1;
@@ -51,12 +51,12 @@ int main()
     FILE* p_file5;
     FILE* p_file6;
 
-    if (fopen_s(&p_file5, "test.txt.huff", "rb") != 0)
+    if (fopen_s(&p_file5, "samples\\test1.txt.huff", "rb") != 0)
     {
         printf("error loading test1.txt\n");
         return -1;
     }
-    if (fopen_s(&p_file6, "test.txt.huff.txt", "wb") != 0)
+    if (fopen_s(&p_file6, "samples\\test1.txt.huff.txt", "wb") != 0)
     {
         printf("error loading test1.txt.ehuf\n");
         return -1;
