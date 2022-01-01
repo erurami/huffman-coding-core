@@ -5,6 +5,8 @@
 
 int main()
 {
+    long progress;
+
     FILE* p_file1;
     FILE* p_file2;
 
@@ -20,7 +22,7 @@ int main()
         return -1;
     }
 
-    Compress(p_file1, p_file2);
+    Compress(p_file1, p_file2, &progress);
 
     fclose(p_file1);
     fclose(p_file2);
