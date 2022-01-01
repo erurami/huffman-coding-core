@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-bool isEhufFile(char* pFilename);
+bool isHuffFile(char* pFilename);
 bool GetFileExtensionUnderEhuf(char* pFilename, char* pFileExtension);
 void RemoveFileExtennsion(char* pFilename);
 
@@ -21,7 +21,7 @@ int main(int argc, char** argv)
 
     // you should know.. but the string must be maximum about 250 char length
 
-    if (isEhufFile(argv[1]))
+    if (isHuffFile(argv[1]))
     {
 
         if (fopen_s(&pTestFile1, argv[1], "rb") != 0)
@@ -48,24 +48,23 @@ int main(int argc, char** argv)
         fclose(pTestFile1);
         fclose(pTestFile2);
 
-        FILE* p_process;
+        // FILE* p_process;
 
-        p_process = _popen(p_file_name, "r");
+        // p_process = _popen(p_file_name, "r");
 
-        if (p_process == NULL)
-        {
-            printf("failed");
-        }
+        // if (p_process == NULL)
+        // {
+        //     printf("failed");
+        // }
 
-        _pclose(p_process);
-        printf("a");
+        // _pclose(p_process);
 
-        char* p_cmd_line;
-        p_cmd_line = new char[10 + strlen(p_file_name)];
+        // char* p_cmd_line;
+        // p_cmd_line = new char[10 + strlen(p_file_name)];
 
-        strcpy(p_cmd_line, "del ");
-        strcat(p_cmd_line, p_file_name);
-        system(p_cmd_line);
+        // strcpy(p_cmd_line, "del ");
+        // strcat(p_cmd_line, p_file_name);
+        // system(p_cmd_line);
     }
     else
     {
@@ -78,7 +77,7 @@ int main(int argc, char** argv)
         char* p_file_name;
         p_file_name = new char[strlen(argv[1]) + 10];
         strcpy(p_file_name, argv[1]);
-        strcat(p_file_name, ".ehuf");
+        strcat(p_file_name, ".huff");
 
         if (fopen_s(&pTestFile2, p_file_name, "wb") != 0)
         {
@@ -98,7 +97,7 @@ int main(int argc, char** argv)
 }
 
 
-bool isEhufFile(char* pFilename)
+bool isHuffFile(char* pFilename)
 {
     char file_extension[10];
     int a = 0;
@@ -114,9 +113,9 @@ bool isEhufFile(char* pFilename)
         }
         a++;
     }
-    if (file_extension[1] == 'e' &&
-        file_extension[2] == 'h' &&
-        file_extension[3] == 'u' &&
+    if (file_extension[1] == 'h' &&
+        file_extension[2] == 'u' &&
+        file_extension[3] == 'f' &&
         file_extension[4] == 'f')
     {
         return true;
