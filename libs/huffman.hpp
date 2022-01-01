@@ -89,9 +89,49 @@ void Decode(FILE* pFileSource, FILE* pFileToWrite, HuffmanTree* pHuffmanTree, Fi
 
 
 
-// class ProgressManager
-// {
-// };
+#define COMPRESSION_STEP_READFREQ    1
+#define COMPRESSION_STEP_BUILDTREE   2
+#define COMPRESSION_STEP_WRITEINFO1  3
+#define COMPRESSION_STEP_ENCODE      4
+#define COMPRESSION_STEP_WRITEINFO2  5
+
+#define EXTRACTION_STEP_READINFO 1
+#define EXTRACTION_STEP_READTREE 2
+#define EXTRACTION_STEP_DECODE   3
+
+
+#define COMPRESSION_READING_TOTAL_PROG      40
+#define COMPRESSION_BUILDINGTREE_TOTAL_PROG 10
+#define COMPRESSION_WRITING1_TOTAL_PROG     5
+#define COMPRESSION_ENCODING_TOTAL_PROG     40
+#define COMPRESSION_WRITING2_TOTAL_PROG     5
+
+#define EXTRACTION_READINGINFO_TOTAL_PROG 10
+#define EXTRACTION_READINGTREE_TOTAL_PROG 10
+#define EXTRACTION_DECODING_TOTAL_PROG    80
+
+class ProgressManagerCompression
+{
+
+    public:
+
+        long* pProgressPartsPerMillion;
+
+        void UpdateProg(int CompressionStep, long Progress, long Total);
+};
+
+
+
+class ProgressManagerExtraction
+{
+
+    public:
+
+        long* pProgressPartsPerMillion;
+
+        void UpdateProg(int ExtractionStep, long Progress, long Total);
+};
+
 
 
 // unavailable : this variable doesn't effect any.

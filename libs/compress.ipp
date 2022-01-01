@@ -4,6 +4,9 @@
 
 bool G_Reset_WriteNode_Static_Vars = false;
 
+bool G_Use_Progress;
+ProgressManagerCompression G_Progress_manager;
+
 
 
 
@@ -21,9 +24,23 @@ void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgress)
     G_Reset_WriteNode_Static_Vars = true;
 
 
+
+    if (pProgress == NULL)
+    {
+        G_Use_Progress = false;
+    }
+    else
+    {
+        G_Use_Progress = true;
+        G_Progress_manager.pProgressPartsPerMillion = pProgress;
+    }
+
+
+
     HuffmanTree huffman_tree;
 
     BUILD_HUFFMAN_TREE(huffman_tree, pFileSource);
+
 
 
     // PrintHuffmanTree(&huffman_tree);
@@ -51,10 +68,24 @@ void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgress)
 
 void CountFreq(FILE* pFileToCount, unsigned long long *pFreqDes)
 {
+    if (G_Use_Progress)
+    {
+        G_Progress_manager.UpdateProg(COMPRESSION_STEP_READFREQ, 0, 1);
+    }
 
     unsigned long long file_size = GetFileSize(pFileToCount);
 
     fseek(pFileToCount, 0L, SEEK_SET);
+
+    if (G_Use_Progress)
+    {
+        for (unsigned long long i = 0; i < file_size; i++)
+        {
+            G_Progress_manager.UpdateProg(COMPRESSION_STEP_READFREQ, i+1, file_size);
+            pFreqDes[fgetc(pFileToCount)]++;
+        }
+        return;
+    }
 
     for (unsigned long long i = 0; i < file_size; i++)
     {
