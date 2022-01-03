@@ -1,6 +1,8 @@
 
 #pragma once
 
+#include <stdio.h>
+
 
 
 void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL, void (*pTimerFunc)(long, int) = NULL);
