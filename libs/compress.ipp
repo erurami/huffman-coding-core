@@ -19,21 +19,24 @@ ProgressManagerCompression G_Progress_manager;
     }
 
 
-void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgress, void (*pTimerFunc)(long, int))
+void Compress(FILE* pFileSource, FILE* pFileTo,
+              void (*pCallbackFunc)(long, int, void*),
+              void* pArgForFunc)
 {
     G_Reset_WriteNode_Static_Vars = true;
 
 
 
-    if (pProgress == NULL)
+    if (pCallbackFunc == NULL)
     {
         G_Use_Progress = false;
     }
     else
     {
         G_Use_Progress = true;
-        G_Progress_manager.pProgressPartsPerMillion = pProgress;
-        G_Progress_manager.pTimerFunc = pTimerFunc;
+
+        G_Progress_manager.mpCallbackFunc = pCallbackFunc;
+        G_Progress_manager.mpArgForFunc = pArgForFunc;
     }
 
 

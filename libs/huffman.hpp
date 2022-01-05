@@ -3,10 +3,15 @@
 
 
 
-// TODO : timerFunc is not timer!
-// TODO : timerFunc need to receive other argument to receive extra infos.
-void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL, void (*pTimerFunc)(long, int) = NULL);
-void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL, void (*pTimerFunc)(long, int) = NULL);
+void Compress(FILE* pFileSource,
+              FILE* pFileTo,
+              void (*pCallbackFunc)(long, int, void*) = NULL,
+              void* pArgForFunc = NULL);
+
+void Extract (FILE* pFileSource,
+              FILE* pFileTo,
+              void (*pCallbackFunc)(long, int, void*) = NULL,
+              void* pArgForFunc = NULL);
 
 
 
@@ -96,10 +101,12 @@ void Decode(FILE* pFileSource, FILE* pFileToWrite, HuffmanTree* pHuffmanTree, Fi
 #define COMPRESSION_STEP_WRITEINFO1  3
 #define COMPRESSION_STEP_ENCODE      4
 #define COMPRESSION_STEP_WRITEINFO2  5
+#define COMPRESSION_STEP_FINISHED    6
 
 #define EXTRACTION_STEP_READINFO 1
 #define EXTRACTION_STEP_READTREE 2
 #define EXTRACTION_STEP_DECODE   3
+#define EXTRACTION_STEP_FINISHED 4
 
 
 #define COMPRESSION_READING_TOTAL_PROG      40
@@ -117,11 +124,11 @@ class ProgressManagerCompression
 
     public:
 
-        /// timer JANAI!
-        //  it's not a timer function!
-        void (*pTimerFunc)(long, int);
-        long* pProgressPartsPerMillion;
+        void (*mpCallbackFunc)(long, int, void*);
+        void* mpArgForFunc;
 
+        // todo : higher resolution progress.
+        long ProgressPercent;
         int  StepNow;
 
         void UpdateProg(int CompressionStep, long Progress, long Total);
@@ -134,9 +141,10 @@ class ProgressManagerExtraction
 
     public:
 
-        void (*pTimerFunc)(long, int);
-        long* pProgressPartsPerMillion;
+        void (*mpCallbackFunc)(long, int, void*);
+        void* mpArgForFunc;
 
+        long ProgressPercent;
         int  StepNow;
 
         void UpdateProg(int ExtractionStep, long Progress, long Total);

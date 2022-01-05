@@ -6,6 +6,7 @@ bool G_Reset_ReadBranch_Static_Vars = false;
 
 
 bool G_Use_Progress_Extraction;
+// TODO : name
 ProgressManagerExtraction G_Progress_Manager_Extraction;
 
 
@@ -13,21 +14,24 @@ ProgressManagerExtraction G_Progress_Manager_Extraction;
 
 
 
-void Extract(FILE* pFileSource, FILE* pFileTo, long* pProgress, void (*pTimerFunc)(long, int))
+void Extract(FILE* pFileSource, FILE* pFileTo,
+             void (*pCallbackFunc)(long, int, void*),
+             void* pArgForFunc)
 {
     G_Reset_ReadBranch_Static_Vars = true;
 
 
 
-    if (pProgress == NULL)
+    if (pCallbackFunc == NULL)
     {
         G_Use_Progress_Extraction = false;
     }
     else
     {
         G_Use_Progress_Extraction = true;
-        G_Progress_Manager_Extraction.pProgressPartsPerMillion = pProgress;
-        G_Progress_Manager_Extraction.pTimerFunc = pTimerFunc;
+
+        G_Progress_Manager_Extraction.mpCallbackFunc = pCallbackFunc;
+        G_Progress_Manager_Extraction.mpArgForFunc = pArgForFunc;
     }
 
 

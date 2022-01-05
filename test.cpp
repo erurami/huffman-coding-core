@@ -3,14 +3,14 @@
 
 #include "libs\\huffman.hpp"
 
-void ProgressTimerCompression(long progress, int step)
+void ProgressTimerCompression(long progress, int step, void* param)
 {
-    printf("\033[0Gprogress : %ld", progress);
+    printf("\033[0Gcompress progress : %ld", progress);
 }
 
-void ProgressTimerExtraction(long progress, int step)
+void ProgressTimerExtraction (long progress, int step, void* param)
 {
-    printf("\033[0Gprogress : %ld", progress);
+    printf("\033[0Gextract  progress : %ld", progress);
 }
 
 
@@ -33,7 +33,7 @@ int main()
         return -1;
     }
 
-    Compress(p_file1, p_file2, &progress, ProgressTimerCompression);
+    Compress(p_file1, p_file2, ProgressTimerCompression);
 
     fclose(p_file1);
     fclose(p_file2);
@@ -57,7 +57,7 @@ int main()
         return -1;
     }
 
-    Compress(p_file3, p_file4, &progress, ProgressTimerCompression);
+    Compress(p_file3, p_file4, ProgressTimerCompression);
 
     fclose(p_file3);
     fclose(p_file4);
@@ -82,7 +82,7 @@ int main()
         return -1;
     }
 
-    Extract(p_file5, p_file6, &progress, ProgressTimerExtraction);
+    Extract(p_file5, p_file6, ProgressTimerExtraction);
 
     fclose(p_file5);
     fclose(p_file6);

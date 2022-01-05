@@ -71,14 +71,14 @@ void ProgressManagerCompression::UpdateProg(int CompressionStep, long Progress, 
 
         case COMPRESSION_STEP_READFREQ:
 
-            *pProgressPartsPerMillion = 
+            ProgressPercent = 
                 COMPRESSION_READING_TOTAL_PROG * Progress / Total;
 
             break;
 
         case COMPRESSION_STEP_BUILDTREE:
 
-            *pProgressPartsPerMillion = 
+            ProgressPercent = 
                 COMPRESSION_READING_TOTAL_PROG + 
                 COMPRESSION_BUILDINGTREE_TOTAL_PROG * Progress / Total;
 
@@ -86,7 +86,7 @@ void ProgressManagerCompression::UpdateProg(int CompressionStep, long Progress, 
 
         case COMPRESSION_STEP_WRITEINFO1:
 
-            *pProgressPartsPerMillion = 
+            ProgressPercent = 
                 COMPRESSION_READING_TOTAL_PROG + 
                 COMPRESSION_BUILDINGTREE_TOTAL_PROG + 
                 COMPRESSION_WRITING1_TOTAL_PROG * Progress / Total;
@@ -95,7 +95,7 @@ void ProgressManagerCompression::UpdateProg(int CompressionStep, long Progress, 
 
         case COMPRESSION_STEP_ENCODE:
 
-            *pProgressPartsPerMillion = 
+            ProgressPercent = 
                 COMPRESSION_READING_TOTAL_PROG + 
                 COMPRESSION_BUILDINGTREE_TOTAL_PROG + 
                 COMPRESSION_WRITING1_TOTAL_PROG + 
@@ -105,7 +105,7 @@ void ProgressManagerCompression::UpdateProg(int CompressionStep, long Progress, 
 
         case COMPRESSION_STEP_WRITEINFO2:
 
-            *pProgressPartsPerMillion = 
+            ProgressPercent = 
                 COMPRESSION_READING_TOTAL_PROG + 
                 COMPRESSION_BUILDINGTREE_TOTAL_PROG + 
                 COMPRESSION_WRITING1_TOTAL_PROG + 
@@ -116,10 +116,7 @@ void ProgressManagerCompression::UpdateProg(int CompressionStep, long Progress, 
 
     StepNow = CompressionStep;
 
-    if (pTimerFunc != NULL)
-    {
-        (*pTimerFunc)(*pProgressPartsPerMillion, StepNow);
-    }
+    (*mpCallbackFunc)(ProgressPercent, StepNow, mpArgForFunc);
 }
 
 
@@ -131,14 +128,14 @@ void ProgressManagerExtraction::UpdateProg(int ExtractionStep, long Progress, lo
 
         case EXTRACTION_STEP_READINFO:
 
-            *pProgressPartsPerMillion = 
+            ProgressPercent = 
                 EXTRACTION_READINGINFO_TOTAL_PROG * Progress / Total;
 
             break;
 
         case EXTRACTION_STEP_READTREE:
 
-            *pProgressPartsPerMillion = 
+            ProgressPercent = 
                 EXTRACTION_READINGINFO_TOTAL_PROG + 
                 EXTRACTION_READINGTREE_TOTAL_PROG * Progress / Total;
 
@@ -146,7 +143,7 @@ void ProgressManagerExtraction::UpdateProg(int ExtractionStep, long Progress, lo
 
         case EXTRACTION_STEP_DECODE:
 
-            *pProgressPartsPerMillion = 
+            ProgressPercent = 
                 EXTRACTION_READINGINFO_TOTAL_PROG + 
                 EXTRACTION_READINGTREE_TOTAL_PROG + 
                 EXTRACTION_DECODING_TOTAL_PROG * Progress / Total;
@@ -156,8 +153,5 @@ void ProgressManagerExtraction::UpdateProg(int ExtractionStep, long Progress, lo
 
     StepNow = ExtractionStep;
 
-    if (pTimerFunc != NULL)
-    {
-        (*pTimerFunc)(*pProgressPartsPerMillion, StepNow);
-    }
+    (*mpCallbackFunc)(ProgressPercent, StepNow, mpArgForFunc);
 }
