@@ -3,6 +3,8 @@
 
 
 
+// TODO : timerFunc is not timer!
+// TODO : timerFunc need to receive other argument to receive extra infos.
 void Compress(FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL, void (*pTimerFunc)(long, int) = NULL);
 void Extract (FILE* pFileSource, FILE* pFileTo, long* pProgress = NULL, void (*pTimerFunc)(long, int) = NULL);
 
