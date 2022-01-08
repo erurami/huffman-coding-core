@@ -121,6 +121,7 @@ void Decode(FILE* pFileSource, FILE* pFileToWrite, HuffmanTree* pHuffmanTree, Fi
 #define EXTRACTION_READINGTREE_TOTAL_PROG 10
 #define EXTRACTION_DECODING_TOTAL_PROG    80
 
+// TODO : Update Progress when finished.
 class ProgressManagerCompression
 {
 
