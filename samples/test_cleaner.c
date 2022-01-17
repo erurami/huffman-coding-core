@@ -4,6 +4,8 @@
 #include <dirent.h>
 #include <string.h>
 
+int isTestFile(char* filename);
+
 int main()
 {
     DIR* pDirectry;
@@ -20,17 +22,21 @@ int main()
     {
         if (strcmp(pDir->d_name, ".."            ) &&
             strcmp(pDir->d_name, "."             ) &&
-            strcmp(pDir->d_name, "test1.txt"     ) &&
-            strcmp(pDir->d_name, "test2.txt"     ) &&
             strcmp(pDir->d_name, "test_cleaner.c") &&
             strcmp(pDir->d_name, "testcl.exe"    )
             )
         {
-            printf("removing  %s", pDir->d_name);
+            if (isTestFile(pDir->d_name))
+            {
+            }
+            else
+            {
+                printf("removing  %s", pDir->d_name);
 
-            remove(pDir->d_name);
+                remove(pDir->d_name);
 
-            printf("\n");
+                printf("\n");
+            }
         }
     }
 
@@ -38,3 +44,9 @@ int main()
 
     return 0;
 }
+
+int isTestFile(char* filename)
+{
+    return 1;
+}
+
