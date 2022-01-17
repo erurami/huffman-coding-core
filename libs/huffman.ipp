@@ -64,7 +64,7 @@ void PrintNode(HuffmanTreeNode* pNode)
 
 
 
-void ProgressManagerCompression::UpdateProg(int CompressionStep, long Progress, long Total)
+void ProgressManagerCompression::UpdateProg(int CompressionStep, unsigned long long Progress, unsigned long long Total)
 {
     switch (CompressionStep)
     {
@@ -121,7 +121,7 @@ void ProgressManagerCompression::UpdateProg(int CompressionStep, long Progress, 
 
 
 
-void ProgressManagerExtraction::UpdateProg(int ExtractionStep, long Progress, long Total)
+void ProgressManagerExtraction::UpdateProg(int ExtractionStep, unsigned long long Progress, unsigned long long Total)
 {
     switch (ExtractionStep)
     {

@@ -9,11 +9,23 @@ void Compress(FILE* pFileSource,
               FILE* pFileTo,
               void (*pCallbackFunc)(long, int, void*) = NULL,
               void* pArgForFunc = NULL);
+// TODO : 
+// void Compress(const char* pFileFrom,
+//               const char* pFileTo,
+//               void (*pCallbackFunc)(long, int, void*) = NULL,
+//               void* pArgForFunc = NULL);
+
 
 void Extract (FILE* pFileSource,
               FILE* pFileTo,
               void (*pCallbackFunc)(long, int, void*) = NULL,
               void* pArgForFunc = NULL);
+// TODO : 
+// void Extract (const char* pFileFrom,
+//               const char* pFileTo,
+//               void (*pCallbackFunc)(long, int, void*) = NULL,
+//               void* pArgForFunc = NULL);
+
 
 
 
@@ -56,7 +68,7 @@ struct FileHeaderData
 
     long BitsTreeStructure;
     long BytesTreeData;
-    long BytesMainData;
+    unsigned long long BytesMainData;
 
     int  BitsUsedInLastByte;
 
@@ -134,7 +146,7 @@ class ProgressManagerCompression
         long ProgressPercent;
         int  StepNow;
 
-        void UpdateProg(int CompressionStep, long Progress, long Total);
+        void UpdateProg(int CompressionStep, unsigned long long Progress, unsigned long long Total);
 };
 
 
@@ -150,7 +162,7 @@ class ProgressManagerExtraction
         long ProgressPercent;
         int  StepNow;
 
-        void UpdateProg(int ExtractionStep, long Progress, long Total);
+        void UpdateProg(int ExtractionStep , unsigned long long Progress, unsigned long long Total);
 };
 
 
