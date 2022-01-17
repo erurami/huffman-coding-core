@@ -4,6 +4,9 @@
 #include <dirent.h>
 #include <string.h>
 
+
+//
+
 int isTestFile(char* filename);
 
 int main()
@@ -23,6 +26,7 @@ int main()
         if (strcmp(pDir->d_name, ".."            ) &&
             strcmp(pDir->d_name, "."             ) &&
             strcmp(pDir->d_name, "test_cleaner.c") &&
+            strcmp(pDir->d_name, "testFiles.txt" ) &&
             strcmp(pDir->d_name, "testcl.exe"    )
             )
         {
@@ -47,6 +51,34 @@ int main()
 
 int isTestFile(char* filename)
 {
-    return 1;
+    FILE* pTestFiles;
+
+    pTestFiles = fopen("testFiles.txt", "r");
+
+    if (pTestFiles == NULL)
+    {
+        printf("no testFiles.txt\n");
+        exit(EXIT_SUCCESS);
+    }
+
+
+    char testFileName[FILENAME_MAX];
+
+    while (1)
+    {
+        fscanf(pTestFiles, "%s", testFileName);
+
+        if (!strcmp(testFileName, "end"))
+        {
+            break;
+        }
+
+        if (!strcmp(testFileName, filename))
+        {
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
