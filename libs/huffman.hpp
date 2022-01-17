@@ -1,5 +1,6 @@
 
-#pragma once
+#ifndef _HUFFMAN_HPP_
+#define _HUFFMAN_HPP_
 
 #include <stdio.h>
 
@@ -109,6 +110,7 @@ void Decode(FILE* pFileSource, FILE* pFileToWrite, HuffmanTree* pHuffmanTree, Fi
 
 
 
+#define _PROGRESS_UPDATE_FREQ 100
 
 #define COMPRESSION_STEP_READFREQ    1
 #define COMPRESSION_STEP_BUILDTREE   2
@@ -187,3 +189,4 @@ void PrintHuffmanTree(HuffmanTree* p_huffman_tree);
 
 #include "huffman.ipp"
 
+#endif

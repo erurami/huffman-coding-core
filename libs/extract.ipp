@@ -1,13 +1,14 @@
 
 #pragma once
+#include "huffman.hpp"
 
 
-bool G_Reset_ReadBranch_Static_Vars = false;
+bool _G_Extract_Reset_Static_Vars_ReadBranch = false;
 
 
-bool G_Use_Progress_Extraction;
+bool _G_Extract_Use_Progress;
 // TODO : name
-ProgressManagerExtraction G_Progress_Manager_Extraction;
+ProgressManagerExtraction _G_Extract_Progress_Manager;
 
 
 
@@ -18,20 +19,20 @@ void Extract(FILE* pFileSource, FILE* pFileTo,
              void (*pCallbackFunc)(long, int, void*),
              void* pArgForFunc)
 {
-    G_Reset_ReadBranch_Static_Vars = true;
+    _G_Extract_Reset_Static_Vars_ReadBranch = true;
 
 
 
     if (pCallbackFunc == NULL)
     {
-        G_Use_Progress_Extraction = false;
+        _G_Extract_Use_Progress = false;
     }
     else
     {
-        G_Use_Progress_Extraction = true;
+        _G_Extract_Use_Progress = true;
 
-        G_Progress_Manager_Extraction.mpCallbackFunc = pCallbackFunc;
-        G_Progress_Manager_Extraction.mpArgForFunc = pArgForFunc;
+        _G_Extract_Progress_Manager.mpCallbackFunc = pCallbackFunc;
+        _G_Extract_Progress_Manager.mpArgForFunc = pArgForFunc;
     }
 
 
@@ -39,7 +40,6 @@ void Extract(FILE* pFileSource, FILE* pFileTo,
 
     FileHeaderData file_infos;
     ReadHeaderData(pFileSource, &file_infos);
-
 
     HuffmanTree huffman_tree;
     ReadHuffmanTree(pFileSource, &huffman_tree, &file_infos);
@@ -62,7 +62,10 @@ void Extract(FILE* pFileSource, FILE* pFileTo,
 long long ReadNumber(FILE* pFile, int numberLocation, int maxNumberToGet);
 void ReadHeaderData(FILE* pFile, FileHeaderData* pFileData)
 {
-    G_Progress_Manager_Extraction.UpdateProg(EXTRACTION_STEP_READINFO, 0, 1);
+    if (_G_Extract_Use_Progress)
+    {
+        _G_Extract_Progress_Manager.UpdateProg(EXTRACTION_STEP_READINFO, 0, 1);
+    }
 
     pFileData->OffsetTreeStructure = ReadNumber(pFile, 0x07, 2);
     pFileData->OffsetTreeData      = ReadNumber(pFile, 0x09, 2);
@@ -76,7 +79,10 @@ void ReadHeaderData(FILE* pFile, FileHeaderData* pFileData)
 
     pFileData->FileSize            = ReadNumber(pFile, 0x03, 4);
 
-    G_Progress_Manager_Extraction.UpdateProg(EXTRACTION_STEP_READINFO, 1, 1);
+    if (_G_Extract_Use_Progress)
+    {
+        _G_Extract_Progress_Manager.UpdateProg(EXTRACTION_STEP_READINFO, 1, 1);
+    }
 }
 
 long long ReadNumber(FILE* pFile, int numberLocation, int maxNumberToGet)
@@ -98,7 +104,10 @@ long long ReadNumber(FILE* pFile, int numberLocation, int maxNumberToGet)
 HuffmanTreeNode* ReadBranch(Bitio::File* pFileToRead, HuffmanTree* pHuffmanTree);
 void ReadHuffmanTree(FILE* pFileToRead, HuffmanTree* pHuffmanTree, FileHeaderData* pFileData)
 {
-    G_Progress_Manager_Extraction.UpdateProg(EXTRACTION_STEP_READTREE, 0, 1);
+    if (_G_Extract_Use_Progress)
+    {
+        _G_Extract_Progress_Manager.UpdateProg(EXTRACTION_STEP_READTREE, 0, 1);
+    }
 
     fseek(pFileToRead, 0x0d, SEEK_SET);
 
@@ -146,7 +155,10 @@ void ReadHuffmanTree(FILE* pFileToRead, HuffmanTree* pHuffmanTree, FileHeaderDat
         pHuffmanTree->pLeafNodes[i].Data = file_to_read_bitio.GetChar();
     }
 
-    G_Progress_Manager_Extraction.UpdateProg(EXTRACTION_STEP_READTREE, 1, 1);
+    if (_G_Extract_Use_Progress)
+    {
+        _G_Extract_Progress_Manager.UpdateProg(EXTRACTION_STEP_READTREE, 1, 1);
+    }
 }
 
 HuffmanTreeNode* ReadBranch(Bitio::File* pFileToRead, HuffmanTree* pHuffmanTree)
@@ -155,12 +167,12 @@ HuffmanTreeNode* ReadBranch(Bitio::File* pFileToRead, HuffmanTree* pHuffmanTree)
     static int huffman_tree_parent_index = 0;
     static int huffman_tree_leaf_index   = 0;
 
-    // if (G_Reset_ReadBranch_Static_Vars)
-    // {
-    //     huffman_tree_parent_index = 0;
-    //     huffman_tree_leaf_index   = 0;
-    //     G_Reset_ReadBranch_Static_Vars = false;
-    // }
+    if (_G_Extract_Reset_Static_Vars_ReadBranch)
+    {
+        huffman_tree_parent_index = 0;
+        huffman_tree_leaf_index   = 0;
+        _G_Extract_Reset_Static_Vars_ReadBranch = false;
+    }
 
     bool bit_just_read = pFileToRead->GetBit();
 
@@ -201,7 +213,10 @@ HuffmanTreeNode* ReadBranch(Bitio::File* pFileToRead, HuffmanTree* pHuffmanTree)
 
 void Decode(FILE* pFileSource, FILE* pFileToWrite, HuffmanTree* pHuffmanTree, FileHeaderData* pFileData)
 {
-    G_Progress_Manager_Extraction.UpdateProg(EXTRACTION_STEP_DECODE, 0, 1);
+    if (_G_Extract_Use_Progress)
+    {
+        _G_Extract_Progress_Manager.UpdateProg(EXTRACTION_STEP_DECODE, 0, 1);
+    }
 
     long long bytes_left_in_main_data = pFileData->BytesMainData;
     int       bits_left_in_main_data  = pFileData->BitsUsedInLastByte;
@@ -216,13 +231,18 @@ void Decode(FILE* pFileSource, FILE* pFileToWrite, HuffmanTree* pHuffmanTree, Fi
 
     HuffmanTreeNode current_node = *pHuffmanTree->pRootNode;
 
+
+    unsigned long long update_prog_flag = pFileData->BytesMainData / _PROGRESS_UPDATE_FREQ;
+
     for (int i = 0 ; bytes_left_in_main_data > 0 || bits_left_in_main_data > 0; i++)
     {
 
-        if (G_Use_Progress_Extraction)
+        if (_G_Extract_Use_Progress && update_prog_flag == 0)
         {
-            G_Progress_Manager_Extraction.UpdateProg(EXTRACTION_STEP_DECODE, pFileData->BytesMainData - bytes_left_in_main_data, pFileData->BytesMainData);
+            _G_Extract_Progress_Manager.UpdateProg(EXTRACTION_STEP_DECODE, pFileData->BytesMainData - bytes_left_in_main_data, pFileData->BytesMainData);
+            update_prog_flag = pFileData->BytesMainData / _PROGRESS_UPDATE_FREQ;
         }
+        update_prog_flag--;
 
 
         bit_just_read = file_source.GetBit();
@@ -244,13 +264,16 @@ void Decode(FILE* pFileSource, FILE* pFileToWrite, HuffmanTree* pHuffmanTree, Fi
         }
 
 
-        bits_left_in_main_data--;
         if (bits_left_in_main_data == 0 && bytes_left_in_main_data > 0)
         {
             bytes_left_in_main_data--;
             bits_left_in_main_data = 8;
         }
+        bits_left_in_main_data--;
     }
 
-    G_Progress_Manager_Extraction.UpdateProg(EXTRACTION_STEP_DECODE, 1, 1);
+    if (_G_Extract_Use_Progress)
+    {
+        _G_Extract_Progress_Manager.UpdateProg(EXTRACTION_STEP_DECODE, 1, 1);
+    }
 }

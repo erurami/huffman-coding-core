@@ -5,12 +5,12 @@
 
 void ProgressTimerCompression(long progress, int step, void* param)
 {
-    printf("\033[0Gcompress progress : %ld", progress);
+    printf("\033[0Gcompress progress : %ld%%", progress);
 }
 
 void ProgressTimerExtraction (long progress, int step, void* param)
 {
-    printf("\033[0Gextract  progress : %ld", progress);
+    printf("\033[0Gextract  progress : %ld%%", progress);
 }
 
 

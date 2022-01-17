@@ -8,6 +8,58 @@ bool GetFileExtensionUnderEhuf(char* pFilename, char* pFileExtension);
 void RemoveFileExtennsion(char* pFilename);
 
 
+void ProgressTimerCompression(long progress, int step, void* param)
+{
+    switch (step)
+    {
+        case COMPRESSION_STEP_READFREQ:
+            printf("\033[0MReading file...  %3d%%", progress);
+            break;
+
+        case COMPRESSION_STEP_BUILDTREE:
+            printf("\033[0MBuilding tree... %3d%%", progress);
+            break;
+
+        case COMPRESSION_STEP_WRITEINFO1:
+            printf("\033[0MWriting data...  %3d%%", progress);
+            break;
+
+        case COMPRESSION_STEP_ENCODE:
+            printf("\033[0MEncoding data... %3d%%", progress);
+            break;
+
+        case COMPRESSION_STEP_WRITEINFO2:
+            printf("\033[0MWriting data...  %3d%%", progress);
+            break;
+
+        case COMPRESSION_STEP_FINISHED:
+            printf("\033[0Mfinished!");
+            break;
+    }
+}
+
+void ProgressTimerExtraction (long progress, int step, void* param)
+{
+    switch (step)
+    {
+        case EXTRACTION_STEP_READINFO:
+            printf("\033[0MReading fileinfos...  %3d%%", progress);
+            break;
+
+        case EXTRACTION_STEP_READTREE:
+            printf("\033[0MReading the tree...   %3d%%", progress);
+            break;
+
+        case EXTRACTION_STEP_DECODE:
+            printf("\033[0MDecoding data...      %3d%%", progress);
+            break;
+
+        case EXTRACTION_STEP_FINISHED:
+            printf("\033[0Mfinished!");
+            break;
+    }
+}
+
 int main(int argc, char** argv)
 {
     FILE* pTestFile1;
@@ -35,7 +87,6 @@ int main(int argc, char** argv)
         strcpy(p_file_name, argv[1]);
 
         RemoveFileExtennsion(p_file_name);
-        printf("from : %s\n to : %s\n", argv[1], p_file_name);
 
         if (fopen_s(&pTestFile2, p_file_name, "wb") != 0)
         {
@@ -43,7 +94,7 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        Extract(pTestFile1, pTestFile2);
+        Extract(pTestFile1, pTestFile2, ProgressTimerExtraction);
 
         fclose(pTestFile1);
         fclose(pTestFile2);
@@ -85,7 +136,7 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        Compress(pTestFile1, pTestFile2);
+        Compress(pTestFile1, pTestFile2, ProgressTimerCompression);
 
         fclose(pTestFile1);
         fclose(pTestFile2);
@@ -121,7 +172,6 @@ bool isHuffFile(char* pFilename)
         return true;
     }
     file_extension[a] = 0;
-    printf("%s", file_extension);
     return false;
 }
 
@@ -139,7 +189,6 @@ void RemoveFileExtennsion(char* pFilename)
             last_period_pos = i;
         }
     }
-    printf("%d", second_last_period_pos);
 
     for (i = last_period_pos; i > second_last_period_pos; i--)
     {

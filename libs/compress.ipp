@@ -2,48 +2,44 @@
 #pragma once
 
 
-bool G_Reset_WriteNode_Static_Vars = false;
+bool _G_Compress_Reset_Static_Vars_WriteNode = false;
 
-bool G_Use_Progress;
-ProgressManagerCompression G_Progress_manager;
-
-
+bool _G_Compress_Use_Progress;
+ProgressManagerCompression _G_Compress_Progress_Manager;
 
 
-#define BUILD_HUFFMAN_TREE(huffman_tree, source_file) \
-    {\
-    unsigned long long freqs[256] = {0};\
-    CountFreq(source_file, freqs);\
-\
-    BuildHuffmanTree(freqs, &huffman_tree);\
-    }
 
 
-void Compress(FILE* pFileSource, FILE* pFileTo,
+
+
+void Compress(FILE* pFileFrom, FILE* pFileTo,
               void (*pCallbackFunc)(long, int, void*),
               void* pArgForFunc)
 {
-    G_Reset_WriteNode_Static_Vars = true;
+    _G_Compress_Reset_Static_Vars_WriteNode = true;
 
 
 
     if (pCallbackFunc == NULL)
     {
-        G_Use_Progress = false;
+        _G_Compress_Use_Progress = false;
     }
     else
     {
-        G_Use_Progress = true;
+        _G_Compress_Use_Progress = true;
 
-        G_Progress_manager.mpCallbackFunc = pCallbackFunc;
-        G_Progress_manager.mpArgForFunc = pArgForFunc;
+        _G_Compress_Progress_Manager.mpCallbackFunc = pCallbackFunc;
+        _G_Compress_Progress_Manager.mpArgForFunc = pArgForFunc;
     }
 
 
 
     HuffmanTree huffman_tree;
 
-    BUILD_HUFFMAN_TREE(huffman_tree, pFileSource);
+    unsigned long long freqs[256] = {0};
+    CountFreq(pFileFrom, freqs);
+
+    BuildHuffmanTree(freqs, &huffman_tree);
 
 
 
@@ -56,10 +52,13 @@ void Compress(FILE* pFileSource, FILE* pFileTo,
 
     FileHeaderData header_data;
 
-    WriteHuffmanTree(&file_to_write, &huffman_tree             , &header_data);
-    WriteMainData   (&file_to_write, &huffman_tree, pFileSource, &header_data);
-    WriteHeaderData (&file_to_write                            , &header_data);
+    WriteHuffmanTree(&file_to_write, &huffman_tree           , &header_data);
+    WriteMainData   (&file_to_write, &huffman_tree, pFileFrom, &header_data);
+    WriteHeaderData (&file_to_write                          , &header_data);
 }
+
+
+
 
 
 
@@ -72,30 +71,39 @@ void Compress(FILE* pFileSource, FILE* pFileTo,
 
 void CountFreq(FILE* pFileToCount, unsigned long long *pFreqDes)
 {
-    if (G_Use_Progress)
+    if (_G_Compress_Use_Progress)
     {
-        G_Progress_manager.UpdateProg(COMPRESSION_STEP_READFREQ, 0, 1);
+        _G_Compress_Progress_Manager.UpdateProg(COMPRESSION_STEP_READFREQ, 0, 1);
     }
 
     unsigned long long file_size = GetFileSize(pFileToCount);
 
     fseek(pFileToCount, 0L, SEEK_SET);
 
-    if (G_Use_Progress)
+    if (_G_Compress_Use_Progress)
     {
-        // TODO : Update when only nessesary.
+        unsigned long long update_prog_flag = file_size / _PROGRESS_UPDATE_FREQ;
+
         for (unsigned long long i = 0; i < file_size; i++)
         {
-            G_Progress_manager.UpdateProg(COMPRESSION_STEP_READFREQ, i+1, file_size);
+            if (update_prog_flag == 0)
+            {
+                _G_Compress_Progress_Manager.UpdateProg(COMPRESSION_STEP_READFREQ, i+1, file_size);
+                update_prog_flag = file_size / _PROGRESS_UPDATE_FREQ;
+            }
+            pFreqDes[fgetc(pFileToCount)]++;
+            update_prog_flag--;
+        }
+    }
+    else
+    {
+        for (unsigned long long i = 0; i < file_size; i++)
+        {
             pFreqDes[fgetc(pFileToCount)]++;
         }
-        return;
     }
 
-    for (unsigned long long i = 0; i < file_size; i++)
-    {
-        pFreqDes[fgetc(pFileToCount)]++;
-    }
+    return;
 }
 
 
@@ -106,7 +114,10 @@ void SortMinHeap    (HuffmanTreeNode** minHeap, int minHeapLength);
 void InsertToMinHeap(HuffmanTreeNode** minHeap, int minHeapLength, HuffmanTreeNode* pNodeToInsert);
 void BuildHuffmanTree(unsigned long long *pFreqs, HuffmanTree* pHuffmanTree)
 {
-    G_Progress_manager.UpdateProg(COMPRESSION_STEP_BUILDTREE, 0, 1);
+    if (_G_Compress_Use_Progress)
+    {
+        _G_Compress_Progress_Manager.UpdateProg(COMPRESSION_STEP_BUILDTREE, 0, 1);
+    }
 
     int exist_chars = 0;
 
@@ -123,7 +134,7 @@ void BuildHuffmanTree(unsigned long long *pFreqs, HuffmanTree* pHuffmanTree)
     pHuffmanTree->pParentNodes = new HuffmanTreeNode [exist_chars - 1];
     pHuffmanTree->LeafNodeLength = exist_chars;
 
-    // Notice & TODO : min heap is decending order.
+    // Notice : min heap is decending order.
     HuffmanTreeNode** min_heap;
     min_heap = new HuffmanTreeNode* [exist_chars];
     int min_heap_length = exist_chars;
@@ -177,7 +188,10 @@ void BuildHuffmanTree(unsigned long long *pFreqs, HuffmanTree* pHuffmanTree)
         index++;
     }
 
-    G_Progress_manager.UpdateProg(COMPRESSION_STEP_BUILDTREE, 1, 1);
+    if (_G_Compress_Use_Progress)
+    {
+        _G_Compress_Progress_Manager.UpdateProg(COMPRESSION_STEP_BUILDTREE, 1, 1);
+    }
 }
 
 
@@ -268,13 +282,15 @@ void MergeMinHeap(HuffmanTreeNode** minHeap, int first, int middle, int last)
 // first, slide from the back of the array, and if the freq was more than the node which merged
 //  just before this, insert and return.
 //
-//  1. {9, 7, 4, 3, 2   , NULL}
+//  1. {9, 7, 4, 3   , 2   , NULL}
 //
-//  2. {9, 7, 4, 3, NULL, 2   }
+//  2. {9, 7, 4, 3   , NULL, 2   }
 //
-//  3. {9, 7, 4, 3, 2   , 2   }
-//                  ª
-//                  (inserted)
+//  3. {9, 7, 4, NULL, 3   , 2   }
+//
+//  4. {9, 7, 4, 3   , 3   , 2   }
+//               ª
+//               (inserted)
 
 void InsertToMinHeap(HuffmanTreeNode** minHeap, int minHeapLength, HuffmanTreeNode* pNodeToInsert)
 {
@@ -302,7 +318,10 @@ void InsertToMinHeap(HuffmanTreeNode** minHeap, int minHeapLength, HuffmanTreeNo
 long WriteNode(Bitio::File* pFileToWrite, HuffmanTreeNode* pNode, int* pCharsAppered);
 void WriteHuffmanTree(Bitio::File* pFileToWrite, HuffmanTree* pHuffmanTree, FileHeaderData* pFileData)
 {
-    G_Progress_manager.UpdateProg(COMPRESSION_STEP_WRITEINFO1  , 0, 1);
+    if (_G_Compress_Use_Progress)
+    {
+        _G_Compress_Progress_Manager.UpdateProg(COMPRESSION_STEP_WRITEINFO1  , 0, 1);
+    }
 
 
 
@@ -340,7 +359,10 @@ void WriteHuffmanTree(Bitio::File* pFileToWrite, HuffmanTree* pHuffmanTree, File
 
 
 
-    G_Progress_manager.UpdateProg(COMPRESSION_STEP_WRITEINFO1  , 1, 1);
+    if (_G_Compress_Use_Progress)
+    {
+        _G_Compress_Progress_Manager.UpdateProg(COMPRESSION_STEP_WRITEINFO1  , 1, 1);
+    }
 }
 
 long WriteNode(Bitio::File* pFileToWrite, HuffmanTreeNode* pNode, int* pCharsAppered)
@@ -349,11 +371,11 @@ long WriteNode(Bitio::File* pFileToWrite, HuffmanTreeNode* pNode, int* pCharsApp
     static int appered_chars_count = 0;
     static long bits_written = 0;
 
-    if (G_Reset_WriteNode_Static_Vars)
+    if (_G_Compress_Reset_Static_Vars_WriteNode)
     {
         appered_chars_count = 0;
         bits_written = 0;
-        G_Reset_WriteNode_Static_Vars = false;
+        _G_Compress_Reset_Static_Vars_WriteNode = false;
     }
 
     if (pNode->NodeType == 1)
@@ -381,7 +403,10 @@ long WriteNode(Bitio::File* pFileToWrite, HuffmanTreeNode* pNode, int* pCharsApp
 void MakeConvertionTable(HuffmanTree* pHuffmanTree, bool* pConvertionTable, int* pConvertionTableLengthes);
 void WriteMainData   (Bitio::File* pFileToWrite, HuffmanTree* pHuffmanTree, FILE* pSourceFile, FileHeaderData* pFileData)
 {
-    G_Progress_manager.UpdateProg(COMPRESSION_STEP_ENCODE, 0, 1);
+    if (_G_Compress_Use_Progress)
+    {
+        _G_Compress_Progress_Manager.UpdateProg(COMPRESSION_STEP_ENCODE, 0, 1);
+    }
 
 
     bool convertion_table[256][256];
@@ -413,14 +438,20 @@ void WriteMainData   (Bitio::File* pFileToWrite, HuffmanTree* pHuffmanTree, FILE
 
 
 
-    if (G_Use_Progress)
+    if (_G_Compress_Use_Progress)
     {
+        unsigned long long update_prog_flag = file_size / _PROGRESS_UPDATE_FREQ;
         // TODO : Update when only nessesary.
         for (unsigned long long i = 0; i < file_size; i++)
         {
-            G_Progress_manager.UpdateProg(COMPRESSION_STEP_ENCODE, i+1, file_size);
+            if (update_prog_flag == 0)
+            {
+                _G_Compress_Progress_Manager.UpdateProg(COMPRESSION_STEP_ENCODE, i+1, file_size);
+                update_prog_flag = file_size / _PROGRESS_UPDATE_FREQ;
+            }
             character = fgetc(pSourceFile);
             pFileToWrite->PutBits(&convertion_table[character][0], convertion_table_lengthes[character]);
+            update_prog_flag--;
         }
     }
     else
@@ -458,7 +489,10 @@ void WriteMainData   (Bitio::File* pFileToWrite, HuffmanTree* pHuffmanTree, FILE
     // printf("FileSize            : %llx\n", pFileData->FileSize           );
 
 
-    G_Progress_manager.UpdateProg(COMPRESSION_STEP_ENCODE, 1, 1);
+    if (_G_Compress_Use_Progress)
+    {
+        _G_Compress_Progress_Manager.UpdateProg(COMPRESSION_STEP_ENCODE, 1, 1);
+    }
 }
 
 void MakeConvertionTable(HuffmanTree* pHuffmanTree, bool* pConvertionTable, int* pConvertionTableLengthes)
@@ -491,7 +525,7 @@ void MakeConvertionTable(HuffmanTree* pHuffmanTree, bool* pConvertionTable, int*
 void WriteNumber(Bitio::File* pFileToWrite, long long number, int bits);
 void WriteHeaderData(Bitio::File* pFileToWrite, FileHeaderData* pFileData)
 {
-    G_Progress_manager.UpdateProg(COMPRESSION_STEP_WRITEINFO2, 0, 1);
+    _G_Compress_Progress_Manager.UpdateProg(COMPRESSION_STEP_WRITEINFO2, 0, 1);
 
 
     pFileToWrite->SeekBytes(0);
@@ -513,7 +547,7 @@ void WriteHeaderData(Bitio::File* pFileToWrite, FileHeaderData* pFileData)
 
     pFileToWrite->PutChar(pFileData->BitsUsedInLastByte);
 
-    G_Progress_manager.UpdateProg(COMPRESSION_STEP_WRITEINFO2, 1, 1);
+    _G_Compress_Progress_Manager.UpdateProg(COMPRESSION_STEP_WRITEINFO2, 1, 1);
 }
 
 void WriteNumber(Bitio::File* pFileToWrite, long long number, int bits)
