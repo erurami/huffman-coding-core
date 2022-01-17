@@ -9,22 +9,22 @@ void Compress(FILE* pFileSource,
               FILE* pFileTo,
               void (*pCallbackFunc)(long, int, void*) = NULL,
               void* pArgForFunc = NULL);
-// TODO : 
-// void Compress(const char* pFileFrom,
-//               const char* pFileTo,
-//               void (*pCallbackFunc)(long, int, void*) = NULL,
-//               void* pArgForFunc = NULL);
+
+void Compress(const char* pFileFrom,
+              const char* pFileTo,
+              void (*pCallbackFunc)(long, int, void*) = NULL,
+              void* pArgForFunc = NULL);
 
 
 void Extract (FILE* pFileSource,
               FILE* pFileTo,
               void (*pCallbackFunc)(long, int, void*) = NULL,
               void* pArgForFunc = NULL);
-// TODO : 
-// void Extract (const char* pFileFrom,
-//               const char* pFileTo,
-//               void (*pCallbackFunc)(long, int, void*) = NULL,
-//               void* pArgForFunc = NULL);
+
+void Extract (const char* pFileFrom,
+              const char* pFileTo,
+              void (*pCallbackFunc)(long, int, void*) = NULL,
+              void* pArgForFunc = NULL);
 
 
 
